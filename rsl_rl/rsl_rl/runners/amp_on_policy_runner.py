@@ -32,6 +32,7 @@ import time
 import os
 from collections import deque
 import statistics
+from termcolor import cprint
 
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
@@ -104,6 +105,9 @@ class AMPOnPolicyRunner:
         _, _ = self.env.reset()
     
     def learn(self, num_learning_iterations, init_at_random_ep_len=False):
+        # restore the training
+        self.restore_train(self.cfg['checkpoint_model'])
+
         # initialize writer
         if self.log_dir is not None and self.writer is None:
             self.writer = SummaryWriter(log_dir=self.log_dir, flush_secs=10)
@@ -276,3 +280,17 @@ class AMPOnPolicyRunner:
         if device is not None:
             self.alg.actor_critic.to(device)
         return self.alg.actor_critic.act_inference
+
+    def restore_train(self, path):  # fine tune
+        if not path:
+            cprint('[Learning from scratch] Start training stage 1 Policy', 'green', attrs=['bold'])
+            return
+        path = os.path.join(os.path.dirname(self.log_dir), path)
+        cprint(f'[Fine Tune] Loading pre-trained model from: {path}', 'green', attrs=['bold'])
+        loaded_dict = torch.load(path)
+        # only load the actor state, encoder state is not needed
+        self.alg.actor_critic.load_state_dict(loaded_dict['model_state_dict'])
+        self.alg.discriminator.load_state_dict(loaded_dict['discriminator_state_dict'])
+        self.alg.amp_normalizer = loaded_dict['amp_normalizer']
+
+        self.alg.optimizer.load_state_dict(loaded_dict['optimizer_state_dict'])

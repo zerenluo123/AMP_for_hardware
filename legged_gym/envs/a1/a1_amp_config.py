@@ -183,4 +183,6 @@ class A1AMPCfgPPO( LeggedRobotCfgPPO ):
 
         load_run = -1
 
+        checkpoint_model = None # load pre-trained model name
+
 

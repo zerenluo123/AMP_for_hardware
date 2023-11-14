@@ -146,7 +146,9 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
             cfg_train.runner.load_run = args.load_run
         if args.checkpoint is not None:
             cfg_train.runner.checkpoint = args.checkpoint
-
+        if args.checkpoint_model: # load pretrained model
+            cfg_train.runner.checkpoint_model = args.checkpoint_model
+            print('load pretrained model', args.checkpoint_model)
     return env_cfg, cfg_train
 
 def get_args():
@@ -164,6 +166,11 @@ def get_args():
         {"name": "--num_envs", "type": int, "help": "Number of environments to create. Overrides config file if provided."},
         {"name": "--seed", "type": int, "help": "Random seed. Overrides config file if provided."},
         {"name": "--max_iterations", "type": int, "help": "Maximum number of training iterations. Overrides config file if provided."},
+
+        # ! load pretrained
+        {"name": "--output_name", "type": str, "default": "debug", "help": "where you save and load the nn policy"},
+        {"name": "--checkpoint_model", "type": str, "default": None, "help": "which policy model to load from"},
+
     ]
     # parse arguments
     args = gymutil.parse_arguments(
