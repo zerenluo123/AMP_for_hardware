@@ -69,13 +69,15 @@ class A1AMPCfg( LeggedRobotCfg ):
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
-        control_type = 'P'
-        stiffness = {'joint': 80.}  # [N*m/rad]
-        damping = {'joint': 1.0}     # [N*m*s/rad]
+        control_type = 'actuator_net'
+        stiffness = {'joint': 30.}  # [N*m/rad]
+        damping = {'joint': 0.8}     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
         # decimation: Number of control action updates @ sim DT per policy DT
         decimation = 4
+        use_actuator_network = True
+        actuator_net_file = "{LEGGED_GYM_ROOT_DIR}/resources/actuator_nets/unitree_go1_join_brick_stairs_it550.pt"
 
     class terrain( LeggedRobotCfg.terrain ):
         mesh_type = 'plane'
@@ -91,7 +93,7 @@ class A1AMPCfg( LeggedRobotCfg ):
             "FL_thigh", "FR_thigh", "RL_thigh", "RR_thigh"]
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
 
-    class domain_rand:
+    class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_friction = True
         friction_range = [0.25, 1.75]
         randomize_base_mass = True
@@ -102,6 +104,15 @@ class A1AMPCfg( LeggedRobotCfg ):
         randomize_gains = True
         stiffness_multiplier_range = [0.9, 1.1]
         damping_multiplier_range = [0.9, 1.1]
+
+        randomize_motor_strength = True
+        added_motor_strength = [0.9, 1.1]
+
+        randomize_lag_timesteps = True  # actuator net: True
+        added_lag_timesteps = 6
+
+        randomize_Motor_Offset = True  # actuator net: True
+        added_Motor_OffsetRange = [-0.02, 0.02]
 
     class noise:
         add_noise = True
