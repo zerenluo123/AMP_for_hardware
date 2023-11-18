@@ -31,7 +31,7 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/mocap_motions_a1/*')
+MOTION_FILES = glob.glob('datasets/mocap_motions_go1_new_addright_ocanter/*')
 
 
 class A1AMPCfg( LeggedRobotCfg ):
@@ -50,19 +50,19 @@ class A1AMPCfg( LeggedRobotCfg ):
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.42] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
-            'FL_hip_joint': -0.15,   # [rad]
+            'FL_hip_joint': -0.1,   # [rad]
             'FL_thigh_joint': 0.55,     # [rad]
             'FL_calf_joint': -1.5,   # [rad]
 
-            'FR_hip_joint': 0.15,  # [rad]
+            'FR_hip_joint': 0.1,  # [rad]
             'FR_thigh_joint': 0.55,     # [rad]
             'FR_calf_joint': -1.5,  # [rad]
 
-            'RL_hip_joint': -0.15,   # [rad]
+            'RL_hip_joint': -0.1,   # [rad]
             'RL_thigh_joint': 0.7,   # [rad]
             'RL_calf_joint': -1.5,    # [rad]
 
-            'RR_hip_joint': 0.15,   # [rad]
+            'RR_hip_joint': 0.1,   # [rad]
             'RR_thigh_joint': 0.7,   # [rad]
             'RR_calf_joint': -1.5,    # [rad]
         }
@@ -135,11 +135,11 @@ class A1AMPCfg( LeggedRobotCfg ):
             lin_vel_z = 0.0
             ang_vel_xy = 0.0
             orientation = 0.0
-            torques = 0.0
+            torques = -0.00001 * 1. / (.005 * 6)
             dof_vel = 0.0
-            dof_acc = 0.0
+            dof_acc = -2.5e-7 * 1. / (.005 * 6)
             base_height = 0.0
-            feet_air_time =  0.0
+            feet_air_time =  1.0 * 1. / (.005 * 6)
             collision = 0.0
             feet_stumble = 0.0
             action_rate = 0.0
