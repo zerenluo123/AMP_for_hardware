@@ -18,8 +18,7 @@ import pybullet_data as pd
 
 from datasets.retarget_utils import *
 # from datasets import retarget_config_a1 as config
-# from datasets import retarget_config_go1 as config
-from datasets import retarget_config_go1_new as config
+from datasets import retarget_config_go1 as config
 
 POS_SIZE = 3
 ROT_SIZE = 4
@@ -430,6 +429,7 @@ def main(argv):
       joint_pos_data = np.flip(joint_pos_data, axis=0)
 
     joint_pos_data = joint_pos_data.reshape(joint_pos_data.shape[0], -1, POS_SIZE)
+
     for i in range(joint_pos_data.shape[0]):
       joint_pos_data[i] = process_ref_joint_pos_data(joint_pos_data[i])
 
