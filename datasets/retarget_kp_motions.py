@@ -42,9 +42,10 @@ REF_ROOT_ROT = transformations.quaternion_from_euler(0, 0, 0.47 * np.pi)
 
 REF_PELVIS_JOINT_ID = 0
 REF_NECK_JOINT_ID = 3
+REF_WRIST_JOINT_IDS = [9, 14, 18, 22]
 
-REF_TOE_JOINT_IDS = [10, 15, 19, 23]
-REF_HIP_JOINT_IDS = [6, 11, 16, 20]
+REF_TOE_JOINT_IDS = [10, 15, 19, 23] # FL, FR, RL, RR
+REF_HIP_JOINT_IDS = [6, 11, 16, 20]  # FL_hip, FR_hip, RL_hip, RR_hip
 
 chain_foot_fl = pk.build_serial_chain_from_urdf(
     open(config.URDF_FILENAME).read(), config.FL_FOOT_NAME)
@@ -66,6 +67,8 @@ def build_markers(num_markers):
       col = [0, 0, 1, 1]
     elif (i in REF_TOE_JOINT_IDS):
       col = [1, 0, 0, 1]
+    elif (i in REF_WRIST_JOINT_IDS): # wrist joint
+      col = [1, 0.5, 0, 1]
     else:
       col = [0, 1, 0, 1]
 
@@ -288,7 +291,10 @@ def retarget_pose(robot, default_pose, ref_joint_pos):
                                                                           3]
       ], axis=-1))
 
-  pose = np.concatenate([root_pos, root_rot, joint_pose, tar_toe_pos_local])
+  pose = np.concatenate([root_pos,             # 3
+                         root_rot,             # 4
+                         joint_pose,           # 12
+                         tar_toe_pos_local])   # 12
 
   return pose
 
@@ -331,8 +337,11 @@ def retarget_motion(robot, joint_pos_data):
                               next_ref_joint_pos)
 
     if f == 0:
-      pose_size = curr_pose.shape[
-          -1] + LINEAR_VEL_SIZE + ANGULAR_VEL_SIZE + JOINT_POS_SIZE + TAR_TOE_VEL_LOCAL_SIZE
+      pose_size = (curr_pose.shape[-1] +    # 31
+                   LINEAR_VEL_SIZE +        # 3
+                   ANGULAR_VEL_SIZE +       # 3
+                   JOINT_POS_SIZE +         # 12
+                   TAR_TOE_VEL_LOCAL_SIZE)  # 12
       new_frames = np.zeros([num_frames - 1, pose_size])
 
     # Linear velocity in base frame.
