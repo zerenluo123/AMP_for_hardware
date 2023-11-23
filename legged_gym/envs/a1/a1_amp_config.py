@@ -31,7 +31,7 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/mocap_motions_go1_new_addright_ocanter/*')
+MOTION_FILES = glob.glob('datasets/mocap_motions_go1_biped/*')
 
 
 class A1AMPCfg( LeggedRobotCfg ):
@@ -69,7 +69,7 @@ class A1AMPCfg( LeggedRobotCfg ):
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
-        control_type = 'actuator_net'
+        control_type = 'P'
         stiffness = {'joint': 30.}  # [N*m/rad]
         damping = {'joint': 0.8}     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
@@ -89,8 +89,11 @@ class A1AMPCfg( LeggedRobotCfg ):
         foot_name = "foot"
         penalize_contacts_on = ["thigh", "calf"]
         terminate_after_contacts_on = [
-            "base", "FL_calf", "FR_calf", "RL_calf", "RR_calf",
-            "FL_thigh", "FR_thigh", "RL_thigh", "RR_thigh"]
+            "base",
+            "FL_hip", "FR_hip",
+            "FL_calf", "FR_calf", "RL_calf", "RR_calf",
+            "FL_thigh", "FR_thigh", "RL_thigh", "RR_thigh",
+            "FL_foot", "FR_foot"]
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
 
     class domain_rand(LeggedRobotCfg.domain_rand):
@@ -139,7 +142,7 @@ class A1AMPCfg( LeggedRobotCfg ):
             dof_vel = 0.0
             dof_acc = -2.5e-7 * 1. / (.005 * 6)
             base_height = 0.0
-            feet_air_time =  1.0 * 1. / (.005 * 6)
+            feet_air_time =  0.0
             collision = 0.0
             feet_stumble = 0.0
             action_rate = 0.0
@@ -153,7 +156,7 @@ class A1AMPCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [-1.0, 2.0] # min max [m/s]
+            lin_vel_x = [-1.0, 1.0] # min max [m/s]
             lin_vel_y = [-0.3, 0.3]   # min max [m/s]
             ang_vel_yaw = [-1.57, 1.57]    # min max [rad/s]
             heading = [-3.14, 3.14]
@@ -171,7 +174,7 @@ class A1AMPCfgPPO( LeggedRobotCfgPPO ):
         experiment_name = 'a1_amp_example'
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
-        max_iterations = 500000 # number of policy updates
+        max_iterations = 12000 # number of policy updates
 
         amp_reward_coef = 2.0
         amp_motion_files = MOTION_FILES

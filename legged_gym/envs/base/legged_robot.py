@@ -626,6 +626,7 @@ class LeggedRobot(BaseTask):
         # base position
         root_pos = AMPLoader.get_root_pos_batch(frames)
         root_pos[:, :2] = root_pos[:, :2] + self.env_origins[env_ids, :2]
+        root_pos[:, 2] += 0.5
         self.root_states[env_ids, :3] = root_pos
         root_orn = AMPLoader.get_root_rot_batch(frames)
         self.root_states[env_ids, 3:7] = root_orn
