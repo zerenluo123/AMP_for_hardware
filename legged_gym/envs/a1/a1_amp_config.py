@@ -91,9 +91,11 @@ class A1AMPCfg( LeggedRobotCfg ):
         terminate_after_contacts_on = [
             "base",
             "FL_hip", "FR_hip",
+            "RL_hip", "RR_hip",
             "FL_calf", "FR_calf", "RL_calf", "RR_calf",
             "FL_thigh", "FR_thigh", "RL_thigh", "RR_thigh",
-            "FL_foot", "FR_foot"]
+            "FL_foot", "FR_foot"
+        ]
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
 
     class domain_rand(LeggedRobotCfg.domain_rand):
@@ -148,6 +150,7 @@ class A1AMPCfg( LeggedRobotCfg ):
             action_rate = 0.0
             stand_still = 0.0
             dof_pos_limits = 0.0
+
 
     class commands:
         curriculum = False

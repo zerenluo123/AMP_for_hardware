@@ -742,6 +742,7 @@ class LeggedRobot(BaseTask):
         self.noise_scale_vec = self._get_noise_scale_vec(self.cfg)
         self.gravity_vec = to_torch(get_axis_params(-1., self.up_axis_idx), device=self.device).repeat((self.num_envs, 1))
         self.forward_vec = to_torch([1., 0., 0.], device=self.device).repeat((self.num_envs, 1))
+        self.downward_vec = to_torch([0., 0., -1.], device=self.device).repeat((self.num_envs, 1))
 
         # add last_information
         self.actions = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
@@ -1134,13 +1135,24 @@ class LeggedRobot(BaseTask):
         return torch.sum((torch.abs(self.torques) - self.torque_limits*self.cfg.rewards.soft_torque_limit).clip(min=0.), dim=1)
 
     def _reward_tracking_lin_vel(self):
-        # Tracking of linear velocity commands (xy axes)
-        lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
+        # # Tracking of linear velocity commands (xy axes)
+        # lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
+
+        # bipedal: Tracking of linear velocity commands (zy axes)
+        base_lin_vel_biped = torch.cat((self.base_lin_vel[:, 2].unsqueeze(1),
+                                        self.base_lin_vel[:, 1].unsqueeze(1)),
+                                       dim=1)
+        lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - base_lin_vel_biped), dim=1)
+
         return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
 
     def _reward_tracking_ang_vel(self):
-        # Tracking of angular velocity commands (yaw)
-        ang_vel_error = torch.square(self.commands[:, 2] - self.base_ang_vel[:, 2])
+        # # Tracking of angular velocity commands (yaw)
+        # ang_vel_error = torch.square(self.commands[:, 2] - self.base_ang_vel[:, 2])
+
+        # bipedal: Tracking of angular velocity commands (roll)
+        ang_vel_error = torch.square(self.commands[:, 2] - self.base_ang_vel[:, 0])
+
         return torch.exp(-ang_vel_error/self.cfg.rewards.tracking_sigma)
 
     def _reward_feet_air_time(self):
@@ -1168,3 +1180,34 @@ class LeggedRobot(BaseTask):
     def _reward_feet_contact_forces(self):
         # penalize high contact forces
         return torch.sum((torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1) -  self.cfg.rewards.max_contact_force).clip(min=0.), dim=1)
+
+
+    # ! biped reward
+    def _reward_biped(self):
+        """
+        r = r_stand * (1 + r_facing)
+        r_stand = r_upright + r_max_height
+        """
+        # ! encourage robot's body perpendicular to the ground
+        forward = quat_rotate(self.base_quat, self.forward_vec) # same as quat_apply
+        r_upright = torch.pow(0.5 * forward[:, 2] + 0.5, 2)
+
+        # ! encourage to lift up
+        base_height = torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1)
+        r_max_height = torch.exp(base_height) - 1
+
+        # ! sum (gate function)
+        r_stand = r_upright + r_max_height
+
+        # ! encourage robot’s belly point toward the goal
+        downward = quat_rotate(self.base_quat, self.downward_vec)
+        # r_facing =
+
+        # print("forward  ", forward)
+        # print("downward  ", downward)
+        # print("r_upright  ", r_upright)
+        # print("r_max_height  ", r_max_height)
+
+
+        # r_upright = ()
+        return 0
