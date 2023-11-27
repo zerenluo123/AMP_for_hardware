@@ -7,7 +7,7 @@ VISUALIZE_RETARGETING = True
 URDF_FILENAME = "{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_description/urdf/go1_re.urdf".format(
     LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
 
-OUTPUT_DIR = "{LEGGED_GYM_ROOT_DIR}/datasets/mocap_motions_go1_biped_simp".format(
+OUTPUT_DIR = "{LEGGED_GYM_ROOT_DIR}/datasets/mocap_motions_go1_biped_simp_2".format(
     LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
 
 REF_POS_SCALE = 0.825
@@ -40,30 +40,20 @@ HL_FOOT_NAME = "RL_foot"
 
 MOCAP_MOTIONS = [
     # Output motion name, input file, frame start, frame end, motion weight.
-    # [
-    #     "biped_0",
-    #     "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_beg01_joint_pos.txt".format(
-    #         LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 2740, 2845, 1.0
-    # ],
-    # [
-    #     "biped_1",
-    #     "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_beg00_joint_pos.txt".format(
-    #         LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 1000, 1200, 1.0
-    # ],
     [
         "biped_2",
         "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_beg00_joint_pos.txt".format(
-            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 1280, 1460, 2.0
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 1285, 1440, 2.0
     ],
     [
         "biped_3",
         "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_beg00_joint_pos.txt".format(
-            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 1525, 1725, 2.0
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 1530, 1725, 1.5
     ],
     [
         "biped_4",
         "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_beg00_joint_pos.txt".format(
-            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 2670, 2733, 1.0
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 2670, 2733, 2.0
     ],
 
 ]

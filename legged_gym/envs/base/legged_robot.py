@@ -1199,15 +1199,25 @@ class LeggedRobot(BaseTask):
         # ! sum (gate function)
         r_stand = r_upright + r_max_height
 
-        # ! encourage robot’s belly point toward the goal
+        # ! encourage robot’s belly point toward the command lineal velocity direction
         downward = quat_rotate(self.base_quat, self.downward_vec)
-        # r_facing =
+        # downward_xy = downward[:, :2]
+        # command_xy = self.commands[:, :2]
+        # # calculate the cosine value of the down vector and the command vector
+        # dot_product_facing = torch.bmm(downward_xy.view(downward_xy.shape[0], 1, downward_xy.shape[1]),
+        #                           command_xy.view(command_xy.shape[0], command_xy.shape[1], 1)
+        #                           ).squeeze(-1)
+        # cosine_facing = dot_product_facing / ( torch.norm(downward_xy, dim=1) * torch.norm(command_xy, dim=1) ).unsqueeze(-1)
+        # # calculate the projection of down vector on the command vector
+        # downward_projection = torch.norm(downward_xy, dim=1).unsqueeze(-1) * cosine_facing
+        r_facing = torch.pow(0.5 * torch.norm(downward[:, :2], dim=1) + 0.5, 2)
 
         # print("forward  ", forward)
         # print("downward  ", downward)
         # print("r_upright  ", r_upright)
         # print("r_max_height  ", r_max_height)
+        # print("r_facing  ", r_facing)
+        # r_final = r_stand * (1 + r_facing)
+        # print("**** abs ", r_final)
 
-
-        # r_upright = ()
-        return 0
+        return r_stand * (1 + r_facing)
