@@ -31,7 +31,7 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/mocap_motions_go1_biped/*')
+MOTION_FILES = glob.glob('datasets/mocap_motions_go1_biped_simp_2/*')
 
 
 class A1AMPCfg( LeggedRobotCfg ):
@@ -80,8 +80,9 @@ class A1AMPCfg( LeggedRobotCfg ):
         actuator_net_file = "{LEGGED_GYM_ROOT_DIR}/resources/actuator_nets/unitree_go1_join_brick_stairs_it550.pt"
 
     class terrain( LeggedRobotCfg.terrain ):
-        mesh_type = 'plane'
+        mesh_type = 'trimesh'
         measure_heights = False
+        curriculum = False
 
     class asset( LeggedRobotCfg.asset ):
         # file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/a1/urdf/a1.urdf'
@@ -91,7 +92,7 @@ class A1AMPCfg( LeggedRobotCfg ):
         terminate_after_contacts_on = [
             "base",
             "FL_hip", "FR_hip",
-            "RL_hip", "RR_hip",
+            # "RL_hip", "RR_hip",
             "FL_calf", "FR_calf", "RL_calf", "RR_calf",
             "FL_thigh", "FR_thigh", "RL_thigh", "RR_thigh",
             "FL_foot", "FR_foot"
@@ -150,6 +151,8 @@ class A1AMPCfg( LeggedRobotCfg ):
             action_rate = 0.0
             stand_still = 0.0
             dof_pos_limits = 0.0
+
+            biped = 0.75 * 1. / (.005 * 6)
 
 
     class commands:
