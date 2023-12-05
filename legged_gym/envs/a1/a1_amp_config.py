@@ -77,7 +77,7 @@ class A1AMPCfg( LeggedRobotCfg ):
         # decimation: Number of control action updates @ sim DT per policy DT
         decimation = 4
         use_actuator_network = True
-        actuator_net_file = "{LEGGED_GYM_ROOT_DIR}/resources/actuator_nets/unitree_go1_join_brick_stairs_it550.pt"
+        actuator_net_file = "{LEGGED_GYM_ROOT_DIR}/resources/actuator_nets/unitree_go1_2rd_f50_it1100_mlp_drop_0.04.pt"
 
     class terrain( LeggedRobotCfg.terrain ):
         mesh_type = 'plane'
