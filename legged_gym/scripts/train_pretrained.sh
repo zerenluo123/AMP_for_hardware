@@ -14,5 +14,5 @@ echo extra "${EXTRA_ARGS}"
 CUDA_VISIBLE_DEVICES=${GPUS} \
 python legged_gym/scripts/train.py --task=a1_amp --headless --seed=${SEED} \
 --output_name="${CACHE}" \
---checkpoint_model="${PRETRAIN}"/model_9600.pt \
+--checkpoint_model="${PRETRAIN}"/model_25000.pt \
 ${EXTRA_ARGS}

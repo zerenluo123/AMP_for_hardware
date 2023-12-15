@@ -41,6 +41,7 @@ import pygame
 import torch
 from torch import Tensor
 from typing import Tuple, Dict
+from termcolor import cprint
 
 from legged_gym import LEGGED_GYM_ROOT_DIR
 from legged_gym.envs.base.base_task import BaseTask
@@ -100,7 +101,7 @@ class LeggedRobot(BaseTask):
 
         # load actuator network
         if self.cfg.control.control_type == "actuator_net":
-            print("********* Load actuator net from *********", self.cfg.control.actuator_net_file)
+            cprint(f'********* Load actuator net from ********* \n {self.cfg.control.actuator_net_file}', 'cyan', attrs=['bold'])
             actuator_network_path = self.cfg.control.actuator_net_file.format(
                 LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
             actuator_network = torch.jit.load(actuator_network_path).to(self.device)

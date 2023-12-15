@@ -31,7 +31,7 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/mocap_motions_go1_new_addright_ocanter/*')
+MOTION_FILES = glob.glob('datasets/mocap_motions_go1_new_addright_trot_jump/*')
 
 
 class A1AMPCfg( LeggedRobotCfg ):
@@ -77,7 +77,7 @@ class A1AMPCfg( LeggedRobotCfg ):
         # decimation: Number of control action updates @ sim DT per policy DT
         decimation = 4
         use_actuator_network = True
-        actuator_net_file = "{LEGGED_GYM_ROOT_DIR}/resources/actuator_nets/unitree_go1_2rd_f50_it1100_mlp_drop_0.04.pt"
+        actuator_net_file = "{LEGGED_GYM_ROOT_DIR}/resources/actuator_nets/unitree_go1_2rd_f100_it2000_mlp_jump.pt"
 
     class terrain( LeggedRobotCfg.terrain ):
         mesh_type = 'plane'
@@ -109,7 +109,7 @@ class A1AMPCfg( LeggedRobotCfg ):
         added_motor_strength = [0.9, 1.1]
 
         randomize_lag_timesteps = True  # actuator net: True
-        added_lag_timesteps = 6
+        added_lag_timesteps = 4
 
         randomize_Motor_Offset = True  # actuator net: True
         added_Motor_OffsetRange = [-0.02, 0.02]
@@ -171,7 +171,7 @@ class A1AMPCfgPPO( LeggedRobotCfgPPO ):
         experiment_name = 'a1_amp_example'
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
-        max_iterations = 500000 # number of policy updates
+        max_iterations = 25000 # number of policy updates
 
         amp_reward_coef = 2.0
         amp_motion_files = MOTION_FILES
