@@ -292,19 +292,19 @@ class LeggedRobot(BaseTask):
 
         if self._get_commands_from_joystick:
           for event in pygame.event.get():
-            lin_vel_x = -1 * self._p1.get_axis(1) * 2
+            lin_vel_x = self._p1.get_axis(0) * 2
             if lin_vel_x >= 0:
              lin_vel_x *= torch.abs(torch.tensor(self.command_ranges["lin_vel_x"][1]))
             else:
              lin_vel_x *= torch.abs(torch.tensor(self.command_ranges["lin_vel_x"][0]))
 
-            lin_vel_y = -1 * self._p1.get_axis(3)
+            lin_vel_y = -1 * self._p1.get_axis(1)
             if lin_vel_y >= 0:
              lin_vel_y *= torch.abs(torch.tensor(self.command_ranges["lin_vel_y"][1]))
             else:
              lin_vel_y *= torch.abs(torch.tensor(self.command_ranges["lin_vel_y"][0]))
 
-            ang_vel = -1 * self._p1.get_axis(0)
+            ang_vel = -1 * self._p1.get_axis(3)
             if ang_vel >= 0:
              ang_vel *= torch.abs(torch.tensor(self.command_ranges["ang_vel_yaw"][1]))
             else:
