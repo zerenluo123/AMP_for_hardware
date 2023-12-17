@@ -7,7 +7,7 @@ VISUALIZE_RETARGETING = True
 URDF_FILENAME = "{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_description/urdf/go1_re.urdf".format(
     LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
 
-OUTPUT_DIR = "{LEGGED_GYM_ROOT_DIR}/datasets/mocap_motions_go1_backflip_wosquat".format(
+OUTPUT_DIR = "{LEGGED_GYM_ROOT_DIR}/datasets/mocap_motions_go1_backflip_wosquat_less".format(
     LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
 
 REF_POS_SCALE = 1.0
@@ -43,6 +43,6 @@ MOCAP_MOTIONS = [
     [
         "backflip00",
         "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/mc_backflip_joint_pos_xy_hip.txt".format(
-            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 50, 190, 1.0
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 60, 155, 1.0
     ],
 ]

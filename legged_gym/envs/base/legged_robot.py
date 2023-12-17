@@ -292,7 +292,7 @@ class LeggedRobot(BaseTask):
 
         if self._get_commands_from_joystick:
           for event in pygame.event.get():
-            lin_vel_x = self._p1.get_axis(0) * 2
+            lin_vel_x = self._p1.get_axis(0)
             if lin_vel_x >= 0:
              lin_vel_x *= torch.abs(torch.tensor(self.command_ranges["lin_vel_x"][1]))
             else:
@@ -1134,8 +1134,15 @@ class LeggedRobot(BaseTask):
         return torch.sum((torch.abs(self.torques) - self.torque_limits*self.cfg.rewards.soft_torque_limit).clip(min=0.), dim=1)
 
     def _reward_tracking_lin_vel(self):
-        # Tracking of linear velocity commands (xy axes)
-        lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
+        # # Tracking of linear velocity commands (xy axes)
+        # lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
+
+        # backflip: Tracking of linear velocity commands (xz axes)
+        base_lin_vel_backflip = torch.cat((self.base_lin_vel[:, 0].unsqueeze(1),
+                                        self.base_lin_vel[:, 2].unsqueeze(1)),
+                                       dim=1)
+        lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - base_lin_vel_backflip), dim=1)
+
         return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
 
     def _reward_tracking_ang_vel(self):
