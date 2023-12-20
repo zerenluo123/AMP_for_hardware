@@ -7,7 +7,7 @@ VISUALIZE_RETARGETING = True
 URDF_FILENAME = "{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_description/urdf/go1_re.urdf".format(
     LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
 
-OUTPUT_DIR = "{LEGGED_GYM_ROOT_DIR}/datasets/mocap_motions_go1_new_addright_jump".format(
+OUTPUT_DIR = "{LEGGED_GYM_ROOT_DIR}/datasets/mocap_motions_go1_trot_jump".format(
     LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
 
 REF_POS_SCALE = 0.825
@@ -18,10 +18,10 @@ SIM_TOE_JOINT_IDS = [6, 11, 16, 21]
 SIM_HIP_JOINT_IDS = [2, 7, 12, 17]
 SIM_ROOT_OFFSET = np.array([0, 0, -0.04])
 SIM_TOE_OFFSET_LOCAL = [
-    np.array([0, 0.06, 0.0]),
-    np.array([0, -0.06, 0.0]),
-    np.array([0, 0.06, 0.0]),
-    np.array([0, -0.06, 0.0])
+    np.array([0, 0.09, 0.0]),
+    np.array([0, -0.09, 0.0]),
+    np.array([0, 0.09, 0.0]),
+    np.array([0, -0.09, 0.0])
 ]
 TOE_HEIGHT_OFFSET = 0.02
 
@@ -47,26 +47,21 @@ MOCAP_MOTIONS = [
     ],
     [
         "jump01",
-        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_jump01_joint_pos.txt".format(
-            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 1550, 1610, 1.0
-    ],
-    [
-        "jump03",
         "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_stepup_jump0_joint_pos.txt".format(
             LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 580, 690, 1.5
     ],
     [
-        "jump04",
+        "jump02",
         "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_stepup_jump1_joint_pos.txt".format(
             LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 390, 503, 1.5
     ],
     [
-        "jump05",
+        "jump03",
         "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_stepup_jump2_joint_pos.txt".format(
             LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 0, 100, 1.5
     ],
     [
-        "jump06",
+        "jump04",
         "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_stepup_jump3_joint_pos.txt".format(
             LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 470, 565, 1.5
     ],
@@ -100,6 +95,20 @@ MOCAP_MOTIONS = [
         "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_walk09_joint_pos.txt".format(
             LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 1233, 1327, 1.5
     ],
-
+    [
+        "trot0",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_walk06_joint_pos.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 182, 254, 1
+    ],
+    [
+        "trot1",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_walk06_joint_pos.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 255, 394, 1
+    ],
+    [
+        "trot2",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_run04_joint_pos.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 480, 663, 1
+    ],
 
 ]

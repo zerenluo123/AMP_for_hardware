@@ -292,7 +292,7 @@ class LeggedRobot(BaseTask):
 
         if self._get_commands_from_joystick:
           for event in pygame.event.get():
-            lin_vel_x = -1 * self._p1.get_axis(1) * 2
+            lin_vel_x = -1 * self._p1.get_axis(1)
             if lin_vel_x >= 0:
              lin_vel_x *= torch.abs(torch.tensor(self.command_ranges["lin_vel_x"][1]))
             else:
@@ -1168,3 +1168,15 @@ class LeggedRobot(BaseTask):
     def _reward_feet_contact_forces(self):
         # penalize high contact forces
         return torch.sum((torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1) -  self.cfg.rewards.max_contact_force).clip(min=0.), dim=1)
+
+    def _reward_jump_high(self):
+        # reward the jumping height (only when in the air)
+        contact = self.contact_forces[:, self.feet_indices, 2] > 1.
+        still_on_ground = torch.any(contact, dim=1)    # is there still feet contact: True: still contact; False: all no contact
+        flying = ~still_on_ground                      # is the robot flying phase
+
+        base_height = torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1)
+        base_height *= flying           # only reward the flying height
+        base_height *= base_height > 0.40
+        # print("height ", base_height)
+        return torch.exp(base_height) - 1
