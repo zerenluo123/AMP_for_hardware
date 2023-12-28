@@ -176,6 +176,7 @@ class LeggedRobot(BaseTask):
         """
         self.gym.refresh_actor_root_state_tensor(self.sim)
         self.gym.refresh_net_contact_force_tensor(self.sim)
+        self.gym.refresh_rigid_body_state_tensor(self.sim)
 
         self.episode_length_buf += 1
         self.common_step_counter += 1
@@ -712,6 +713,8 @@ class LeggedRobot(BaseTask):
         actor_root_state = self.gym.acquire_actor_root_state_tensor(self.sim)
         dof_state_tensor = self.gym.acquire_dof_state_tensor(self.sim)
         net_contact_forces = self.gym.acquire_net_contact_force_tensor(self.sim)
+        rigid_body_state_tensor = self.gym.acquire_rigid_body_state_tensor(self.sim)
+        self.rigid_body_state = gymtorch.wrap_tensor(rigid_body_state_tensor).view(self.num_envs, -1, 13)
 
         if self.cfg.control.control_type == "POSE":
             # Note: Position control
@@ -726,6 +729,7 @@ class LeggedRobot(BaseTask):
         self.gym.refresh_dof_state_tensor(self.sim)
         self.gym.refresh_actor_root_state_tensor(self.sim)
         self.gym.refresh_net_contact_force_tensor(self.sim)
+        self.gym.refresh_rigid_body_state_tensor(self.sim)
 
         # create some wrapper tensors for different slices
         self.root_states = gymtorch.wrap_tensor(actor_root_state)
@@ -1169,7 +1173,7 @@ class LeggedRobot(BaseTask):
         # penalize high contact forces
         return torch.sum((torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1) -  self.cfg.rewards.max_contact_force).clip(min=0.), dim=1)
 
-    def _reward_jump_high(self):
+    def _reward_base_jump_high(self):
         # reward the jumping height (only when in the air)
         contact = self.contact_forces[:, self.feet_indices, 2] > 1.
         still_on_ground = torch.any(contact, dim=1)    # is there still feet contact: True: still contact; False: all no contact
@@ -1179,4 +1183,17 @@ class LeggedRobot(BaseTask):
         base_height *= flying           # only reward the flying height
         base_height *= base_height > 0.40
         # print("height ", base_height)
-        return torch.exp(base_height) - 1
+        return base_height
+
+    def _reward_feet_jump_high(self):
+        # reward the jumping height (only when in the air)
+        contact = self.contact_forces[:, self.feet_indices, 2] > 1.
+        still_on_ground = torch.any(contact, dim=1)    # is there still feet contact: True: still contact; False: all no contact
+        flying = ~still_on_ground                      # is the robot flying phase
+
+        # feet_height = torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1)
+        feet_height_sum = torch.sum(self.rigid_body_state[:, self.feet_indices, 2], dim=-1)
+        feet_height_sum *= flying           # only reward the flying height
+        # feet_height *= feet_height > 0.40
+        # print("feet_height_sum ", torch.exp(feet_height_sum) - 1)
+        return feet_height_sum

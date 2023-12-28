@@ -31,10 +31,10 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/mocap_motions_go1_trot_jump/*')
+MOTION_FILES = glob.glob('datasets/mocap_motions_aliengo_pace_canter/*')
 
 
-class A1AMPCfg( LeggedRobotCfg ):
+class AliengoAMPCfg( LeggedRobotCfg ):
 
     class env( LeggedRobotCfg.env ):
         num_envs = 5480
@@ -51,27 +51,27 @@ class A1AMPCfg( LeggedRobotCfg ):
         pos = [0.0, 0.0, 0.42] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
             'FL_hip_joint': -0.0,   # [rad]
-            'FL_thigh_joint': 0.55,     # [rad]
+            'FL_thigh_joint': 0.8,     # [rad]
             'FL_calf_joint': -1.5,   # [rad]
 
             'FR_hip_joint': 0.0,  # [rad]
-            'FR_thigh_joint': 0.55,     # [rad]
+            'FR_thigh_joint': 0.8,     # [rad]
             'FR_calf_joint': -1.5,  # [rad]
 
             'RL_hip_joint': -0.0,   # [rad]
-            'RL_thigh_joint': 0.7,   # [rad]
+            'RL_thigh_joint': 1.0,   # [rad]
             'RL_calf_joint': -1.5,    # [rad]
 
             'RR_hip_joint': 0.0,   # [rad]
-            'RR_thigh_joint': 0.7,   # [rad]
+            'RR_thigh_joint': 1.0,   # [rad]
             'RR_calf_joint': -1.5,    # [rad]
         }
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
-        control_type = 'actuator_net'
-        stiffness = {'joint': 30.}  # [N*m/rad]
-        damping = {'joint': 0.8}     # [N*m*s/rad]
+        control_type = 'P'
+        stiffness = {'joint': 40.}  # [N*m/rad]
+        damping = {'joint': 1.2}     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
         # decimation: Number of control action updates @ sim DT per policy DT
@@ -85,7 +85,7 @@ class A1AMPCfg( LeggedRobotCfg ):
 
     class asset( LeggedRobotCfg.asset ):
         # file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/a1/urdf/a1.urdf'
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_description/urdf/go1.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/aliengo_description/urdf/aliengo.urdf'
         foot_name = "foot"
         penalize_contacts_on = ["thigh", "calf"]
         terminate_after_contacts_on = [
@@ -146,8 +146,6 @@ class A1AMPCfg( LeggedRobotCfg ):
             stand_still = 0.0
             dof_pos_limits = 0.0
 
-            # base_jump_high = 1.5 * 1. / (.005 * 6)
-            # feet_jump_high = 1.5 * 1. / (.005 * 6)
 
     class commands:
         curriculum = False
@@ -156,12 +154,12 @@ class A1AMPCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [-1.0, 2.0] # min max [m/s]
+            lin_vel_x = [-1.0, 3.0] # min max [m/s]
             lin_vel_y = [-0.3, 0.3]   # min max [m/s]
             ang_vel_yaw = [-1.57, 1.57]    # min max [rad/s]
             heading = [-3.14, 3.14]
 
-class A1AMPCfgPPO( LeggedRobotCfgPPO ):
+class AliengoAMPCfgPPO( LeggedRobotCfgPPO ):
     runner_class_name = 'AMPOnPolicyRunner'
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
@@ -171,7 +169,7 @@ class A1AMPCfgPPO( LeggedRobotCfgPPO ):
 
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'go1_trot_jump'
+        experiment_name = 'aliengo_amp_example'
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
         max_iterations = 25000 # number of policy updates

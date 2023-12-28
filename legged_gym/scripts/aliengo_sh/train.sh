@@ -2,17 +2,15 @@
 GPUS=$1
 SEED=$2
 CACHE=$3
-PRETRAIN=$4
 
 array=( $@ )
 len=${#array[@]}
-EXTRA_ARGS=${array[@]:4:$len}
+EXTRA_ARGS=${array[@]:3:$len}
 EXTRA_ARGS_SLUG=${EXTRA_ARGS// /_}
 
 echo extra "${EXTRA_ARGS}"
 
 CUDA_VISIBLE_DEVICES=${GPUS} \
-python legged_gym/scripts/train.py --task=a1_amp --headless --seed=${SEED} \
+python legged_gym/scripts/train.py --task=aliengo_amp --headless --seed=${SEED} \
 --output_name="${CACHE}" \
---checkpoint_model="${PRETRAIN}"/model_22800.pt \
 ${EXTRA_ARGS}
