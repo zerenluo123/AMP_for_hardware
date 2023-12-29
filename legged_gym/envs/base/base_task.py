@@ -105,6 +105,12 @@ class BaseTask():
                 self.viewer, gymapi.KEY_ESCAPE, "QUIT")
             self.gym.subscribe_viewer_keyboard_event(
                 self.viewer, gymapi.KEY_V, "toggle_viewer_sync")
+            self.gym.subscribe_viewer_keyboard_event(
+                self.viewer, gymapi.KEY_F, "free_cam")
+
+        self.free_cam = False
+        self.lookat_id = 0
+        self.lookat_vec = torch.tensor([-0, 2, 1], requires_grad=False, device=self.device)
 
     def get_observations(self):
         return self.obs_buf
@@ -125,11 +131,18 @@ class BaseTask():
     def step(self, actions):
         raise NotImplementedError
 
+    def lookat(self, i):
+        look_at_pos = self.root_states[i, :3].clone()
+        cam_pos = look_at_pos + self.lookat_vec
+        self.set_camera(cam_pos, look_at_pos)
+
     def render(self, sync_frame_time=True):
         if self.viewer:
             # check for window closed
             if self.gym.query_viewer_has_closed(self.viewer):
                 sys.exit()
+            if not self.free_cam:
+                self.lookat(self.lookat_id)
 
             # check for keyboard events
             for evt in self.gym.query_viewer_action_events(self.viewer):
@@ -137,6 +150,11 @@ class BaseTask():
                     sys.exit()
                 elif evt.action == "toggle_viewer_sync" and evt.value > 0:
                     self.enable_viewer_sync = not self.enable_viewer_sync
+
+                if evt.action == "free_cam" and evt.value > 0:
+                    self.free_cam = not self.free_cam
+                    if self.free_cam:
+                        self.set_camera(self.cfg.viewer.pos, self.cfg.viewer.lookat)
 
             # fetch results
             if self.device != 'cpu':
@@ -150,3 +168,9 @@ class BaseTask():
                     self.gym.sync_frame_time(self.sim)
             else:
                 self.gym.poll_viewer_events(self.viewer)
+
+            if not self.free_cam:
+                p = self.gym.get_viewer_camera_transform(self.viewer, None).p
+                cam_trans = torch.tensor([p.x, p.y, p.z], requires_grad=False, device=self.device)
+                look_at_pos = self.root_states[self.lookat_id, :3].clone()
+                self.lookat_vec = cam_trans - look_at_pos

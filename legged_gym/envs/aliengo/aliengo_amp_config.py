@@ -31,7 +31,7 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/mocap_motions_aliengo_pace_canter/*')
+MOTION_FILES = glob.glob('datasets/mocap_motions_aliengo_turn_sym_ocanter/*')
 
 
 class AliengoAMPCfg( LeggedRobotCfg ):
@@ -172,7 +172,7 @@ class AliengoAMPCfgPPO( LeggedRobotCfgPPO ):
         experiment_name = 'aliengo_amp_example'
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
-        max_iterations = 25000 # number of policy updates
+        max_iterations = 20000 # number of policy updates
 
         amp_reward_coef = 2.0
         amp_motion_files = MOTION_FILES
