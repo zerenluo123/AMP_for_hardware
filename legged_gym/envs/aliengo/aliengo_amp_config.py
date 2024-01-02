@@ -31,7 +31,7 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/mocap_motions_aliengo_turn_sym_ocanter/*')
+MOTION_FILES = glob.glob('datasets/mocap_motions_aliengo_turn_sym_ocanter1/*')
 
 
 class AliengoAMPCfg( LeggedRobotCfg ):
@@ -69,7 +69,7 @@ class AliengoAMPCfg( LeggedRobotCfg ):
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
-        control_type = 'P'
+        control_type = 'actuator_net'
         stiffness = {'joint': 40.}  # [N*m/rad]
         damping = {'joint': 1.2}     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
@@ -77,7 +77,7 @@ class AliengoAMPCfg( LeggedRobotCfg ):
         # decimation: Number of control action updates @ sim DT per policy DT
         decimation = 4
         use_actuator_network = True
-        actuator_net_file = "{LEGGED_GYM_ROOT_DIR}/resources/actuator_nets/unitree_go1_2rd_f100_it2000_mlp_drop0.04_quad.pt"
+        actuator_net_file = "{LEGGED_GYM_ROOT_DIR}/resources/actuator_nets/unitree_aliengo_2rd_f100_it4000_ly2_mlp_dec27_dec28.pt"
 
     class terrain( LeggedRobotCfg.terrain ):
         mesh_type = 'plane'
@@ -97,7 +97,7 @@ class AliengoAMPCfg( LeggedRobotCfg ):
         randomize_friction = True
         friction_range = [0.25, 1.75]
         randomize_base_mass = True
-        added_mass_range = [-1., 1.]
+        added_mass_range = [-1., 3.]
         push_robots = True
         push_interval_s = 15
         max_push_vel_xy = 1.0
