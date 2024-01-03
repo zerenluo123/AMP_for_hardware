@@ -31,7 +31,7 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/mocap_motions_aliengo_turn_sym_ocanter1/*')
+MOTION_FILES = glob.glob('datasets/mocap_motions_aliengo_jump/*')
 
 
 class AliengoAMPCfg( LeggedRobotCfg ):
@@ -69,7 +69,7 @@ class AliengoAMPCfg( LeggedRobotCfg ):
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
-        control_type = 'actuator_net'
+        control_type = 'P'
         stiffness = {'joint': 40.}  # [N*m/rad]
         damping = {'joint': 1.2}     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
@@ -172,7 +172,7 @@ class AliengoAMPCfgPPO( LeggedRobotCfgPPO ):
         experiment_name = 'aliengo_amp_example'
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
-        max_iterations = 20000 # number of policy updates
+        max_iterations = 25000 # number of policy updates
 
         amp_reward_coef = 2.0
         amp_motion_files = MOTION_FILES

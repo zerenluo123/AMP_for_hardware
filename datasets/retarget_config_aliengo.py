@@ -136,7 +136,7 @@ MOCAP_MOTIONS = [
             LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 1085, 1219, 1.0
     ],
     [
-        "left_turn2",
+        "left_turn3",
         "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/ai4animation/dog_walk09_joint_pos.txt".format(
             LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 1219, 1454, 1.0
     ],
