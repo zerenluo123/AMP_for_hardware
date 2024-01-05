@@ -31,7 +31,7 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/mocap_motions_aliengo_jump/*')
+MOTION_FILES = glob.glob('datasets/mocap_motions_aliengo_jumpL/*')
 
 
 class AliengoAMPCfg( LeggedRobotCfg ):
@@ -146,6 +146,8 @@ class AliengoAMPCfg( LeggedRobotCfg ):
             stand_still = 0.0
             dof_pos_limits = 0.0
 
+            feet_jump_high = 1.2 * 1. / (.005 * 6)
+
 
     class commands:
         curriculum = False
@@ -177,7 +179,7 @@ class AliengoAMPCfgPPO( LeggedRobotCfgPPO ):
         amp_reward_coef = 2.0
         amp_motion_files = MOTION_FILES
         amp_num_preload_transitions = 2000000
-        amp_task_reward_lerp = 0.3
+        amp_task_reward_lerp = 0.2
         amp_discr_hidden_dims = [1024, 512]
 
         min_normalized_std = [0.01, 0.01, 0.01] * 4

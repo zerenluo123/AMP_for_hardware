@@ -1195,5 +1195,5 @@ class LeggedRobot(BaseTask):
         feet_height_sum = torch.sum(self.rigid_body_state[:, self.feet_indices, 2], dim=-1)
         feet_height_sum *= flying           # only reward the flying height
         # feet_height *= feet_height > 0.40
-        # print("feet_height_sum ", torch.exp(feet_height_sum) - 1)
+        # print("feet_height_sum ", feet_height_sum)
         return feet_height_sum
