@@ -36,6 +36,7 @@ from termcolor import cprint
 
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
+from rsl_rl.utils.utils import export_policy_as_jit, export_policy_as_onnx
 import torch
 
 from rsl_rl.algorithms import AMPPPO, PPO
@@ -273,6 +274,23 @@ class AMPOnPolicyRunner:
         if load_optimizer:
             self.alg.optimizer.load_state_dict(loaded_dict['optimizer_state_dict'])
         self.current_learning_iteration = loaded_dict['iter']
+
+        # export policy as a jit module (used to run it from C++)
+        if self.cfg['export_policy']:
+            cprint('Exporting policy to jit module(C++)', 'green', attrs=['bold'])
+            jit_save_path = os.path.join(os.path.dirname(path), 'exported_s1')
+            export_policy_as_jit(self.alg.actor_critic.actor, jit_save_path, 'actor.pt')
+            print(f"exported jit actor: {self.alg.actor_critic.actor}")
+        if self.cfg['export_onnx_policy']:
+            cprint('Exporting policy to onnx module(C++)', 'red', attrs=['bold'])
+            onnx_save_path = os.path.join(os.path.dirname(path), 'exported_onnx_s1')
+            # calculate input size and save as onnx model
+            export_policy_as_onnx(self.alg.actor_critic.actor,
+                                  self.alg.actor_critic.num_actor_input,
+                                  onnx_save_path,
+                                  'actor.onnx')
+            print(f"exported onnx actor: {self.alg.actor_critic.actor}")
+
         return loaded_dict['infos']
 
     def get_inference_policy(self, device=None):

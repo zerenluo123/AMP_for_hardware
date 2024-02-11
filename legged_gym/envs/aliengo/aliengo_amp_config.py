@@ -188,4 +188,7 @@ class AliengoAMPCfgPPO( LeggedRobotCfgPPO ):
 
         checkpoint_model = None # load pre-trained model name
 
+        export_policy = False
+        export_onnx_policy = False
+
 

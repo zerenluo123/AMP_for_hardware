@@ -185,3 +185,31 @@ def quaternion_slerp(q0, q1, fraction, spin=0, shortestpath=True):
     q0 += q1
     out[final_mask] = q0[final_mask]
     return out
+
+
+import copy
+import os
+def export_policy_as_jit(network, path, name):
+    os.makedirs(path, exist_ok=True)
+    path = os.path.join(path, name)
+    model = copy.deepcopy(network).to('cpu')
+    traced_script_module = torch.jit.script(model)
+    traced_script_module.save(path)
+
+def export_policy_as_onnx(network, input_size, path, name):
+    os.makedirs(path, exist_ok=True)
+    path = os.path.join(path, name)
+    model = copy.deepcopy(network).to('cpu')
+    dummy_observation = torch.zeros(1, input_size) # dummy observation with batch_size=1
+    print(f"************** dummy observation size {dummy_observation.shape} **************")
+    torch.onnx.export(
+        model,
+        dummy_observation,
+        path,
+        export_params=True,
+        opset_version=11,
+        verbose=True,
+        input_names=["observation"],
+        output_names=["action"],
+        dynamic_axes={},
+    )

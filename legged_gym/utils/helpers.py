@@ -149,6 +149,10 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
         if args.checkpoint_model: # load pretrained model
             cfg_train.runner.checkpoint_model = args.checkpoint_model
             print('load pretrained model', args.checkpoint_model)
+        if args.export_policy:
+            cfg_train.runner.export_policy = args.export_policy
+        if args.export_onnx_policy:
+            cfg_train.runner.export_onnx_policy = args.export_onnx_policy
     return env_cfg, cfg_train
 
 def get_args():
@@ -170,6 +174,12 @@ def get_args():
         # ! load pretrained
         {"name": "--output_name", "type": str, "default": "debug", "help": "where you save and load the nn policy"},
         {"name": "--checkpoint_model", "type": str, "default": None, "help": "which policy model to load from"},
+
+        # export policy for usage in C++
+        {"name": "--export_policy", "action": "store_true", "default": False,
+         "help": "whether or not convert the network to jit(C++)."},
+        {"name": "--export_onnx_policy", "action": "store_true", "default": False,
+         "help": "whether or not convert the network to onnx(C++)."},
 
     ]
     # parse arguments
