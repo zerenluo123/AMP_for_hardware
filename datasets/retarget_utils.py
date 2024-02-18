@@ -2,7 +2,7 @@ import numpy as np
 from pybullet_utils import transformations
 import pybullet
 
-from rsl_rl.datasets import pose3d
+from rl.datasets import pose3d
 
 POS_SIZE = 3
 ROT_SIZE = 4

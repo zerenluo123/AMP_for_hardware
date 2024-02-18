@@ -11,7 +11,7 @@ import isaacgym
 from legged_gym.envs import *
 import legged_gym.utils.kinematics.urdf as pk
 
-from rsl_rl.datasets import pose3d
+from rl.datasets import pose3d
 from pybullet_utils import transformations
 import pybullet
 import pybullet_data as pd

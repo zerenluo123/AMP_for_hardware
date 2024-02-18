@@ -50,7 +50,7 @@ from legged_gym.utils.math import quat_apply_yaw, wrap_to_pi, torch_rand_sqrt_fl
 from legged_gym.utils.helpers import class_to_dict
 import legged_gym.utils.kinematics.urdf as pk
 from .legged_robot_config import LeggedRobotCfg
-from rsl_rl.datasets.motion_loader import AMPLoader
+from rl.datasets.motion_loader import AMPLoader
 
 
 class LeggedRobot(BaseTask):
