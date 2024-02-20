@@ -71,10 +71,6 @@ class BaseTask():
         torch._C._jit_set_profiling_executor(False)
 
         # allocate buffers
-        if cfg.env.include_history_steps is not None:
-            self.obs_buf_history = observation_buffer.ObservationBuffer(
-                self.num_envs, self.num_obs,
-                self.include_history_steps, self.device)
         self.obs_buf = torch.zeros(self.num_envs, self.num_obs, device=self.device, dtype=torch.float)
         self.rew_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
         self.reset_buf = torch.ones(self.num_envs, device=self.device, dtype=torch.long)
@@ -87,6 +83,10 @@ class BaseTask():
             # self.num_privileged_obs = self.num_obs
 
         self.extras = {}
+
+        # allocate history buffers
+        if cfg.env.include_history_steps is not None:
+            self._allocate_hist_buffers()
 
         # create envs, sim and viewer
         self.create_sim()
@@ -112,11 +112,14 @@ class BaseTask():
         self.lookat_id = 0
         self.lookat_vec = torch.tensor([-0, 2, 1], requires_grad=False, device=self.device)
 
+        # ! observation dictionary
+        self.obs_dict = {}
+
     def get_observations(self):
-        return self.obs_buf
-    
+        return self.obs_dict['obs']
+
     def get_privileged_observations(self):
-        return self.privileged_obs_buf
+        return self.obs_dict['privileged_obs']
 
     def reset_idx(self, env_ids):
         """Reset selected robots"""
@@ -125,11 +128,15 @@ class BaseTask():
     def reset(self):
         """ Reset all robots"""
         self.reset_idx(torch.arange(self.num_envs, device=self.device))
-        obs, privileged_obs, _, _, _ = self.step(torch.zeros(self.num_envs, self.num_actions, device=self.device, requires_grad=False))
-        return obs, privileged_obs
+        self.obs_dict['obs'], self.obs_dict['privileged_obs'], _, _, _ = self.step(torch.zeros(self.num_envs, self.num_actions, device=self.device, requires_grad=False))
+        return self.obs_dict['obs'], self.obs_dict['privileged_obs']
 
     def step(self, actions):
         raise NotImplementedError
+
+    def _allocate_hist_buffers(self):
+        self.obs_buf_lag_history = torch.zeros((self.num_envs, self.include_history_steps, self.num_obs), device=self.device, dtype=torch.float)
+        self.proprio_hist_buf = torch.zeros((self.num_envs, self.include_history_steps, self.num_obs), device=self.device, dtype=torch.float)
 
     def lookat(self, i):
         look_at_pos = self.root_states[i, :3].clone()

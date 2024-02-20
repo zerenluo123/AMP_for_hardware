@@ -122,12 +122,8 @@ class LeggedRobot(BaseTask):
     def reset(self):
         """ Reset all robots"""
         self.reset_idx(torch.arange(self.num_envs, device=self.device))
-        if self.cfg.env.include_history_steps is not None:
-            self.obs_buf_history.reset(
-                torch.arange(self.num_envs, device=self.device),
-                self.obs_buf[torch.arange(self.num_envs, device=self.device)])
-        obs, privileged_obs, _, _, _, _, _ = self.step(torch.zeros(self.num_envs, self.num_actions, device=self.device, requires_grad=False))
-        return obs, privileged_obs
+        self.obs_dict['obs'], self.obs_dict['privileged_obs'], _, _, _, _, _ = self.step(torch.zeros(self.num_envs, self.num_actions, device=self.device, requires_grad=False))
+        return self.obs_dict['obs'], self.obs_dict['privileged_obs']
 
     def step(self, actions):
         """ Apply actions, simulate, call self.post_physics_step()
@@ -151,23 +147,18 @@ class LeggedRobot(BaseTask):
         # return clipped obs, clipped states (None), rewards, dones and infos
         clip_obs = self.cfg.normalization.clip_observations
         self.obs_buf = torch.clip(self.obs_buf, -clip_obs, clip_obs)
-        if self.cfg.env.include_history_steps is not None:
-            self.obs_buf_history.reset(reset_env_ids, self.obs_buf[reset_env_ids])
-            self.obs_buf_history.insert(self.obs_buf)
-            policy_obs = self.obs_buf_history.get_obs_vec(np.arange(self.include_history_steps))
-        else:
-            policy_obs = self.obs_buf
+
         if self.privileged_obs_buf is not None:
             self.privileged_obs_buf = torch.clip(self.privileged_obs_buf, -clip_obs, clip_obs)
 
-        return policy_obs, self.privileged_obs_buf, self.rew_buf, self.reset_buf, self.extras, reset_env_ids, terminal_amp_states
+        # assign to obs struct
+        self.obs_dict['obs'] = self.obs_buf
+        self.obs_dict['privileged_obs'] = self.privileged_obs_buf.to(self.device)
+
+        return self.obs_dict['obs'], self.obs_dict['privileged_obs'], self.rew_buf, self.reset_buf, self.extras, reset_env_ids, terminal_amp_states
 
     def get_observations(self):
-        if self.cfg.env.include_history_steps is not None:
-            policy_obs = self.obs_buf_history.get_obs_vec(np.arange(self.include_history_steps))
-        else:
-            policy_obs = self.obs_buf
-        return policy_obs
+        return self.obs_buf
 
     def post_physics_step(self):
         """ check terminations, compute observations and rewards

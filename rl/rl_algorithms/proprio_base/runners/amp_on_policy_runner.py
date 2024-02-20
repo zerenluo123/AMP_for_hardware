@@ -64,10 +64,11 @@ class AMPOnPolicyRunner:
         else:
             num_critic_obs = self.env.num_obs
         actor_critic_class = eval(self.cfg["policy_class_name"]) # ActorCritic
-        if self.env.include_history_steps is not None:
-            num_actor_obs = self.env.num_obs * self.env.include_history_steps
-        else:
-            num_actor_obs = self.env.num_obs
+        # if self.env.include_history_steps is not None:
+        #     num_actor_obs = self.env.num_obs * self.env.include_history_steps
+        # else:
+        #     num_actor_obs = self.env.num_obs
+        num_actor_obs = self.env.num_obs
         actor_critic: ActorCritic = actor_critic_class( num_actor_obs=num_actor_obs,
                                                         num_critic_obs=num_critic_obs,
                                                         num_actions=self.env.num_actions,

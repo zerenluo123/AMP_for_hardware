@@ -38,7 +38,7 @@ class AliengoAMPCfg( LeggedRobotCfg ):
 
     class env( LeggedRobotCfg.env ):
         num_envs = 5480
-        include_history_steps = None  # Number of steps of history to include.
+        include_history_steps = 4  # Number of steps of history to include.
         num_observations = 45
         num_privileged_obs = 48
         reference_state_initialization = True
