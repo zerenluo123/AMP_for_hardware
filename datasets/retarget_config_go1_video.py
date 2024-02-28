@@ -11,18 +11,24 @@ URDF_FILENAME = "{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_description/urdf/go1
 OUTPUT_DIR = "{LEGGED_GYM_ROOT_DIR}/datasets/mocap_motions_go1_video_gen".format(
     LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
 
-REF_POS_SCALE = 0.825
+REF_POS_SCALE = 1
 INIT_POS = np.array([0, 0, 0.32])
 INIT_ROT = np.array([0, 0, 0, 1.0])
 
 SIM_TOE_JOINT_IDS = [6, 11, 16, 21]
 SIM_HIP_JOINT_IDS = [2, 7, 12, 17]
 SIM_ROOT_OFFSET = np.array([0, 0, -0.04])
+#SIM_TOE_OFFSET_LOCAL = [
+#    np.array([0.2, 0.05, 0.0]),
+#    np.array([0.2, -0.05, 0.0]),
+#    np.array([0, -0.2, 0.0]),
+#    np.array([0, 0.2, 0.0])
+#]
 SIM_TOE_OFFSET_LOCAL = [
     np.array([0, 0.06, 0.0]),
     np.array([0, -0.06, 0.0]),
-    np.array([0, 0.06, 0.0]),
-    np.array([0, -0.06, 0.0])
+    np.array([0, 0.03, 0.0]),
+    np.array([0, -0.03, 0.0])
 ]
 TOE_HEIGHT_OFFSET = 0.02
 
@@ -43,8 +49,7 @@ MOCAP_MOTIONS = [
     # Output motion name, input file, frame start, frame end, motion weight.
     [
         "video0",
-        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/walk_joint_pos_from_csv.txt".format(
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/walk_joint_pos5_from_csv.txt".format(
             LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 1, 222, 1
     ],
-
 ]

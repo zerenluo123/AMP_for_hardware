@@ -18,12 +18,18 @@ import pybullet_data as pd
 
 from datasets.retarget_utils import *
 # from datasets import retarget_config_a1 as config
-# from datasets import retarget_config_go1 as config    # (pace & trot) or canter
+#from datasets import retarget_config_go1 as config    # (pace & trot) or canter
 # from datasets import retarget_config_go1_jump as config # jump
 # from datasets import retarget_config_aliengo as config # (pace & trot & canter) Aliengo
-# from datasets import retarget_config_aliengo_jump as config # jump Aliengo
+#from datasets import retarget_config_aliengo_jump as config # jump Aliengo
 from datasets import retarget_config_go1_video as config    # (pace & trot) or canter
 
+# go1_re.urdf 中的关节点顺序:
+#[floating_base,imu_joint,
+#FL_hip_joint,FL_hip_fixed,FL_thigh_joint,FL_calf_joint,FL_foot_fixed,
+#FR_hip_joint,FR_hip_fixed,FR_thigh_joint,FR_calf_joint,FR_foot_fixed,
+#RL_hip_joint,RL_hip_fixed,RL_thigh_joint,RL_calf_joint,RL_foot_fixed,
+#RR_hip_joint,RR_hip_fixed,RR_thigh_joint,RR_calf_joint,RR_foot_fixed]
 
 POS_SIZE = 3
 ROT_SIZE = 4
@@ -41,7 +47,7 @@ GROUND_URDF_FILENAME = "plane_implicit.urdf"
 
 # reference motion
 FRAME_DURATION = 0.01677
-REF_COORD_ROT = transformations.quaternion_from_euler(0.5 * np.pi, 0, 0)
+REF_COORD_ROT = transformations.quaternion_from_euler(0.5 * np.pi, 0, 0)   # X,Y,Z
 REF_POS_OFFSET = np.array([0, 0, 0])
 REF_ROOT_ROT = transformations.quaternion_from_euler(0, 0, 0.47 * np.pi)
 
@@ -184,15 +190,15 @@ def set_foot_marker_pos(marker_pos, robot_idx, unique_ids=None):
   return new_unique_ids
 
 
-def process_ref_joint_pos_data(joint_pos):
+def process_ref_joint_pos_data(joint_pos):  #point 27*3维
   proc_pos = joint_pos.copy()
-  num_pos = joint_pos.shape[0]
+  num_pos = joint_pos.shape[0]   #27
 
-  for i in range(num_pos):
+  for i in range(num_pos):    #POINT
     curr_pos = proc_pos[i]
-    curr_pos = pose3d.QuaternionRotatePoint(curr_pos, REF_COORD_ROT)
-    curr_pos = pose3d.QuaternionRotatePoint(curr_pos, REF_ROOT_ROT)
-    curr_pos = curr_pos * config.REF_POS_SCALE + REF_POS_OFFSET
+    curr_pos = pose3d.QuaternionRotatePoint(curr_pos, REF_COORD_ROT)  #绕X轴旋转90度, 0.5 * np.pi, 0, 0
+    curr_pos = pose3d.QuaternionRotatePoint(curr_pos, REF_ROOT_ROT)  #绕Z轴旋转0.47pi, 0, 0, 0.47 * np.pi
+    curr_pos = curr_pos * config.REF_POS_SCALE + REF_POS_OFFSET   #缩放+偏移
     proc_pos[i] = curr_pos
 
   return proc_pos
@@ -238,7 +244,7 @@ def retarget_root_pose(ref_joint_pos):
 
   return root_pos, root_rot
 
-
+#根据tar_toe_pos,期望末端执行器的位置和当前执行器的位置,求解joint_pose,根据joint_pose前向运动学计算运动后的toe位置tar_toe_pos_local
 def retarget_pose(robot, default_pose, ref_joint_pos):
   joint_lim_low, joint_lim_high = get_joint_limits(robot)
 
@@ -255,7 +261,7 @@ def retarget_pose(robot, default_pose, ref_joint_pos):
   for i in range(len(REF_TOE_JOINT_IDS)):
     ref_toe_id = REF_TOE_JOINT_IDS[i]
     ref_hip_id = REF_HIP_JOINT_IDS[i]
-    sim_hip_id = config.SIM_HIP_JOINT_IDS[i]
+    sim_hip_id = config.SIM_HIP_JOINT_IDS[i]    
     toe_offset_local = config.SIM_TOE_OFFSET_LOCAL[i]
     ref_toe_pos = ref_joint_pos[ref_toe_id]
     ref_hip_pos = ref_joint_pos[ref_hip_id]
@@ -273,17 +279,27 @@ def retarget_pose(robot, default_pose, ref_joint_pos):
     sim_tar_toe_pos += toe_offset_world
 
     tar_toe_pos.append(sim_tar_toe_pos)
-
+  joint_lim_low = [-1.0471975512,-0.663225115758,-2.72271363311,
+                   -1.0471975512,-0.663225115758,-2.72271363311,
+                   -1.0471975512,-0.663225115758,-2.72271363311,
+                   -1.0471975512,-0.663225115758,-2.72271363311]
+  joint_lim_high= [1.0471975512,1.26705972839,-0.837758040957,
+                   1.0471975512,1.26705972839,-0.837758040957,
+                   1.0471975512,1.26705972839,-0.837758040957,
+                   1.0471975512,1.26705972839,-0.837758040957]
+  #!!!!!!逆向运动学求解 joint_pose
+  #机器人的关节角度，使得机器人的末端执行器在给定的位置和姿态下尽可能接近期望的位置和姿态。计算逆运动学的过程通常涉及到迭代算法，因此返回的解不一定是唯一的，可能会存在多个解决方案。返回的关节角度值的数量和顺序与机器人模型中的关节数量和顺序相对应。
   joint_pose = pybullet.calculateInverseKinematics2(
       robot,
-      config.SIM_TOE_JOINT_IDS,
-      tar_toe_pos,
-      jointDamping=config.JOINT_DAMPING,
-      # lowerLimits=joint_lim_low,
-      # upperLimits=joint_lim_high,
-      restPoses=default_pose)
+      config.SIM_TOE_JOINT_IDS,   #SIM_TOE_JOINT_IDS = [6, 11, 16, 21]  末端执行器的链接索引，用于指定要计算逆运动学的末端执行器
+      tar_toe_pos,  #期望末端执行器的位置，作为一个包含三个坐标值的列表或数组 
+      jointDamping=config.JOINT_DAMPING, #关节阻尼，作为一个包含关节数量个元素的列表或数组
+      #lowerLimits=joint_lim_low,  #关节角度的下限,作为一个包含关节数量个元素的列表或数组
+      upperLimits=joint_lim_high, #关节角度的上限
+      restPoses=default_pose)   #在计算逆运动学时，算法通常需要一个初始猜测或初始值来开始迭代计算。
   joint_pose = np.array(joint_pose)
-
+  print("-------:",joint_pose)
+  #正向运动学计算四个足端的位置
   tar_toe_pos_local = np.squeeze(
       np.concatenate([
           chain_foot_fl.forward_kinematics(joint_pose[:3]).get_matrix()[:, :3,
@@ -317,18 +333,23 @@ def load_ref_data(JOINT_POS_FILENAME, FRAME_START, FRAME_END):
   start_frame = 0 if (FRAME_START is None) else FRAME_START
   end_frame = joint_pos_data.shape[0] if (FRAME_END is None) else FRAME_END
   joint_pos_data = joint_pos_data[start_frame:end_frame]
-
+  reverse_x = True
+  if reverse_x:
+      print("joint_pos_data.shape",joint_pos_data.shape) #222,81
+      for i in range(joint_pos_data.shape[1]//3):
+          joint_pos_data[:,i*3+2] = -1*joint_pos_data[:,i*3+2]
   return joint_pos_data
 
 
 def retarget_motion(robot, joint_pos_data):
   num_frames = joint_pos_data.shape[0]
 
-  time_between_frames = FRAME_DURATION
+  time_between_frames = FRAME_DURATION  #合理的设置帧率  
 
   for f in range(num_frames - 1):
     # Current robot pose.
     ref_joint_pos = joint_pos_data[f]
+    print(ref_joint_pos)
     # ref_joint_pos = np.reshape(ref_joint_pos, [-1, POS_SIZE])
     # ref_joint_pos = process_ref_joint_pos_data(ref_joint_pos)
     curr_pose = retarget_pose(robot, config.DEFAULT_JOINT_POSE, ref_joint_pos)
@@ -339,7 +360,7 @@ def retarget_motion(robot, joint_pos_data):
     # next_ref_joint_pos = np.reshape(next_ref_joint_pos, [-1, POS_SIZE])
     # next_ref_joint_pos = process_ref_joint_pos_data(next_ref_joint_pos)
     next_pose = retarget_pose(robot, config.DEFAULT_JOINT_POSE,
-                              next_ref_joint_pos)
+                              next_ref_joint_pos)  #DEFAULT_JOINT_POSE 12维度
 
     if f == 0:
       pose_size = (curr_pose.shape[-1] +    # 31
@@ -400,6 +421,7 @@ def retarget_motion(robot, joint_pos_data):
 
 
 def main(argv):
+  #初始化 pybullet
   p = pybullet
   # p.connect(p.GUI, options=f"--width=1920 --height=1080")
   if config.VISUALIZE_RETARGETING:
@@ -422,12 +444,15 @@ def main(argv):
     pybullet.setGravity(0, 0, 0)
 
     ground = pybullet.loadURDF(GROUND_URDF_FILENAME)  # pylint: disable=unused-variable
+    #加载机器人模型,如GO1
+    print("-----------:",config.URDF_FILENAME)
     robot = pybullet.loadURDF(
         config.URDF_FILENAME,
         config.INIT_POS,
         config.INIT_ROT,
         flags=p.URDF_MAINTAIN_LINK_ORDER)
     # Set robot to default pose to bias knees in the right direction.
+    #将机器人设置为默认姿势，使膝盖向右倾斜。
     set_pose(
         robot,
         np.concatenate(
@@ -437,27 +462,27 @@ def main(argv):
 
     p.removeAllUserDebugItems()
     joint_pos_data = load_ref_data(mocap_motion[1], mocap_motion[2],
-                                   mocap_motion[3] + 1)
-
+                                   mocap_motion[3] + 1)  #input file, frame start, frame end
+    #对拿到的关节数据,依次进行旋转,缩放和平移,之后约束TOE z轴的最小值
     if "reverse" in mocap_motion[0]:
       joint_pos_data = np.flip(joint_pos_data, axis=0)
 
-    joint_pos_data = joint_pos_data.reshape(joint_pos_data.shape[0], -1, POS_SIZE)
+    joint_pos_data = joint_pos_data.reshape(joint_pos_data.shape[0], -1, POS_SIZE)  #POS_SIZE =3 
 
     for i in range(joint_pos_data.shape[0]):
       joint_pos_data[i] = process_ref_joint_pos_data(joint_pos_data[i])
 
     for ref_toe_joint_id in REF_TOE_JOINT_IDS:
       joint_pos_data[:, ref_toe_joint_id, -1] -= np.min(
-          joint_pos_data[:, ref_toe_joint_id, -1])
-      joint_pos_data[:, ref_toe_joint_id, -1] += config.TOE_HEIGHT_OFFSET
-
+          joint_pos_data[:, ref_toe_joint_id, -1])   #所有TOE的z减去最小的z值
+      joint_pos_data[:, ref_toe_joint_id, -1] += config.TOE_HEIGHT_OFFSET  #TOE的z值最小值
+    #retarget motion
     retarget_frames = retarget_motion(robot, joint_pos_data)
     joint_pos_data = joint_pos_data[:-1, :]
 
     output_file = os.path.join(output_dir, f"{mocap_motion[0]}.txt")
     output_motion(retarget_frames, output_file, mocap_motion[4], FRAME_DURATION)
-
+    #visualization
     if config.VISUALIZE_RETARGETING:
       num_markers = joint_pos_data.shape[1]
       marker_ids = build_markers(num_markers)
