@@ -122,8 +122,8 @@ class LeggedRobot(BaseTask):
     def reset(self):
         """ Reset all robots"""
         self.reset_idx(torch.arange(self.num_envs, device=self.device))
-        self.obs_dict['obs'], self.obs_dict['privileged_obs'], _, _, _, _, _ = self.step(torch.zeros(self.num_envs, self.num_actions, device=self.device, requires_grad=False))
-        return self.obs_dict['obs'], self.obs_dict['privileged_obs']
+        self.obs_dict, _, _, _, _, _ = self.step(torch.zeros(self.num_envs, self.num_actions, device=self.device, requires_grad=False))
+        return self.obs_dict
 
     def step(self, actions):
         """ Apply actions, simulate, call self.post_physics_step()
@@ -155,10 +155,10 @@ class LeggedRobot(BaseTask):
         self.obs_dict['obs'] = self.obs_buf
         self.obs_dict['privileged_obs'] = self.privileged_obs_buf.to(self.device)
 
-        return self.obs_dict['obs'], self.obs_dict['privileged_obs'], self.rew_buf, self.reset_buf, self.extras, reset_env_ids, terminal_amp_states
+        return self.obs_dict, self.rew_buf, self.reset_buf, self.extras, reset_env_ids, terminal_amp_states
 
     def get_observations(self):
-        return self.obs_buf
+        return self.obs_dict
 
     def post_physics_step(self):
         """ check terminations, compute observations and rewards

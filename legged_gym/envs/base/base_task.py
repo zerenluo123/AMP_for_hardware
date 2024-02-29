@@ -116,10 +116,7 @@ class BaseTask():
         self.obs_dict = {}
 
     def get_observations(self):
-        return self.obs_dict['obs']
-
-    def get_privileged_observations(self):
-        return self.obs_dict['privileged_obs']
+        return self.obs_dict
 
     def reset_idx(self, env_ids):
         """Reset selected robots"""

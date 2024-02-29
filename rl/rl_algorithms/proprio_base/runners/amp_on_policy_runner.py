@@ -104,7 +104,7 @@ class AMPOnPolicyRunner:
         self.tot_time = 0
         self.current_learning_iteration = 0
 
-        _, _ = self.env.reset()
+        _ = self.env.reset()
     
     def learn(self, num_learning_iterations, init_at_random_ep_len=False):
         # restore the training
@@ -115,11 +115,11 @@ class AMPOnPolicyRunner:
             self.writer = SummaryWriter(log_dir=self.log_dir, flush_secs=10)
         if init_at_random_ep_len:
             self.env.episode_length_buf = torch.randint_like(self.env.episode_length_buf, high=int(self.env.max_episode_length))
-        obs = self.env.get_observations()
-        privileged_obs = self.env.get_privileged_observations()
+        obs_dict = self.env.get_observations()
         amp_obs = self.env.get_amp_observations()
-        critic_obs = privileged_obs if privileged_obs is not None else obs
-        obs, critic_obs, amp_obs = obs.to(self.device), critic_obs.to(self.device), amp_obs.to(self.device)
+        obs, critic_obs, amp_obs = obs_dict['obs'].to(self.device), \
+                                   obs_dict['privileged_obs'].to(self.device), \
+                                   amp_obs.to(self.device)
         self.alg.actor_critic.train() # switch to train mode (for dropout for example)
         self.alg.discriminator.train()
 
@@ -136,11 +136,14 @@ class AMPOnPolicyRunner:
             with torch.inference_mode():
                 for i in range(self.num_steps_per_env):
                     actions = self.alg.act(obs, critic_obs, amp_obs)
-                    obs, privileged_obs, rewards, dones, infos, reset_env_ids, terminal_amp_states = self.env.step(actions)
+                    obs_dict, rewards, dones, infos, reset_env_ids, terminal_amp_states = self.env.step(actions)
                     next_amp_obs = self.env.get_amp_observations()
 
-                    critic_obs = privileged_obs if privileged_obs is not None else obs
-                    obs, critic_obs, next_amp_obs, rewards, dones = obs.to(self.device), critic_obs.to(self.device), next_amp_obs.to(self.device), rewards.to(self.device), dones.to(self.device)
+                    obs, critic_obs, next_amp_obs, rewards, dones = obs_dict['obs'].to(self.device),\
+                                                                    obs_dict['privileged_obs'].to(self.device), \
+                                                                    next_amp_obs.to(self.device), \
+                                                                    rewards.to(self.device), \
+                                                                    dones.to(self.device)
 
                     # Account for terminal states.
                     next_amp_obs_with_term = torch.clone(next_amp_obs)
