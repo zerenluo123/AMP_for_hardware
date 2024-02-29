@@ -154,6 +154,7 @@ class LeggedRobot(BaseTask):
         # assign to obs struct
         self.obs_dict['obs'] = self.obs_buf
         self.obs_dict['privileged_obs'] = self.privileged_obs_buf.to(self.device)
+        self.obs_dict['proprio_hist'] = self.proprio_hist_buf.to(self.device).flatten(1)
 
         return self.obs_dict, self.rew_buf, self.reset_buf, self.extras, reset_env_ids, terminal_amp_states
 
@@ -330,6 +331,23 @@ class LeggedRobot(BaseTask):
             self.obs_buf = self.privileged_obs_buf[:, 3:]
         else:
             self.obs_buf = torch.clone(self.privileged_obs_buf)
+
+        # ! add proprioceptive observation history
+        # get previous step's obs
+        prev_obs_buf = self.obs_buf_lag_history[:, 1:].clone()
+
+        # get current step's obs
+        cur_obs_buf = self.obs_buf.clone().unsqueeze(1)
+
+        # concatenate to get full history
+        self.obs_buf_lag_history[:] = torch.cat([prev_obs_buf, cur_obs_buf], dim=1)
+
+        # refill the initialized buffers
+        # Note: if reset, then the history buffer are all filled with the current observation
+        at_reset_env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
+        self.obs_buf_lag_history[at_reset_env_ids, :, :] = self.obs_buf[at_reset_env_ids].unsqueeze(1)
+
+        self.proprio_hist_buf = self.obs_buf_lag_history[:, -self.include_history_steps:].clone()
 
     def get_amp_observations(self):
         joint_pos = self.dof_pos

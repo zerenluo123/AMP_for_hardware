@@ -59,6 +59,11 @@ class AMPOnPolicyRunner:
         self.policy_cfg = train_cfg["policy"]
         self.device = device
         self.env = env
+
+        # ! network estimator
+        self.num_encoder_input = self.env.num_obs * self.env.include_history_steps
+
+
         if self.env.num_privileged_obs is not None:
             num_critic_obs = self.env.num_privileged_obs 
         else:
@@ -95,7 +100,8 @@ class AMPOnPolicyRunner:
         self.save_interval = self.cfg["save_interval"]
 
         # init storage and model
-        self.alg.init_storage(self.env.num_envs, self.num_steps_per_env, [num_actor_obs], [self.env.num_privileged_obs], [self.env.num_actions])
+        self.alg.init_storage(self.env.num_envs, self.num_steps_per_env, [num_actor_obs],
+                              [self.env.num_privileged_obs], [self.env.num_actions], [self.num_encoder_input])
 
         # Log
         self.log_dir = log_dir
@@ -135,7 +141,7 @@ class AMPOnPolicyRunner:
             # Rollout
             with torch.inference_mode():
                 for i in range(self.num_steps_per_env):
-                    actions = self.alg.act(obs, critic_obs, amp_obs)
+                    actions = self.alg.act(obs_dict, amp_obs)
                     obs_dict, rewards, dones, infos, reset_env_ids, terminal_amp_states = self.env.step(actions)
                     next_amp_obs = self.env.get_amp_observations()
 

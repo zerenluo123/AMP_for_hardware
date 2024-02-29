@@ -102,9 +102,10 @@ class AMPPPO:
         self.max_grad_norm = max_grad_norm
         self.use_clipped_value_loss = use_clipped_value_loss
 
-    def init_storage(self, num_envs, num_transitions_per_env, actor_obs_shape, critic_obs_shape, action_shape):
+    def init_storage(self, num_envs, num_transitions_per_env, actor_obs_shape, critic_obs_shape, action_shape, hist_info_shape):
+        print("**********  History info shape :  ", hist_info_shape)
         self.storage = RolloutStorage(
-            num_envs, num_transitions_per_env, actor_obs_shape, critic_obs_shape, action_shape, self.device)
+            num_envs, num_transitions_per_env, actor_obs_shape, critic_obs_shape, action_shape, hist_info_shape, self.device)
 
     def test_mode(self):
         self.actor_critic.test()
@@ -112,20 +113,24 @@ class AMPPPO:
     def train_mode(self):
         self.actor_critic.train()
 
-    def act(self, obs, critic_obs, amp_obs):
+    def act(self, obs_dict, amp_obs):
         if self.actor_critic.is_recurrent:
             self.transition.hidden_states = self.actor_critic.get_hidden_states()
         # Compute the actions and values
-        aug_obs, aug_critic_obs = obs.detach(), critic_obs.detach()
+        aug_obs, aug_critic_obs = obs_dict['obs'].detach(), obs_dict['privileged_obs'].detach()
         self.transition.actions = self.actor_critic.act(aug_obs).detach()
         self.transition.values = self.actor_critic.evaluate(aug_critic_obs).detach()
         self.transition.actions_log_prob = self.actor_critic.get_actions_log_prob(self.transition.actions).detach()
         self.transition.action_mean = self.actor_critic.action_mean.detach()
         self.transition.action_sigma = self.actor_critic.action_std.detach()
         # need to record obs and critic_obs before env.step()
-        self.transition.observations = obs
-        self.transition.critic_observations = critic_obs
+        self.transition.observations = obs_dict['obs']
+        self.transition.critic_observations = obs_dict['privileged_obs']
         self.amp_transition.observations = amp_obs
+
+        # ! history
+        self.transition.proprio_hist = obs_dict['proprio_hist']
+
         return self.transition.actions
     
     def process_env_step(self, rewards, dones, infos, amp_obs):
