@@ -146,7 +146,7 @@ class AliengoAMPCfg( LeggedRobotCfg ):
             stand_still = 0.0
             dof_pos_limits = 0.0
 
-            feet_jump_high = 1.2 * 1. / (.005 * 6)
+            feet_jump_high = 2.4 * 1. / (.005 * 6)
 
 
     class commands:

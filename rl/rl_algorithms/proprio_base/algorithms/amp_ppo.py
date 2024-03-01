@@ -117,9 +117,8 @@ class AMPPPO:
         if self.actor_critic.is_recurrent:
             self.transition.hidden_states = self.actor_critic.get_hidden_states()
         # Compute the actions and values
-        aug_obs, aug_critic_obs = obs_dict['obs'].detach(), obs_dict['privileged_obs'].detach()
-        self.transition.actions = self.actor_critic.act(aug_obs).detach()
-        self.transition.values = self.actor_critic.evaluate(aug_critic_obs).detach()
+        self.transition.actions = self.actor_critic.act(obs_dict).detach()
+        self.transition.values = self.actor_critic.evaluate(obs_dict).detach()
         self.transition.actions_log_prob = self.actor_critic.get_actions_log_prob(self.transition.actions).detach()
         self.transition.action_mean = self.actor_critic.action_mean.detach()
         self.transition.action_sigma = self.actor_critic.action_std.detach()
@@ -150,9 +149,8 @@ class AMPPPO:
         self.amp_transition.clear()
         self.actor_critic.reset(dones)
     
-    def compute_returns(self, last_critic_obs):
-        aug_last_critic_obs = last_critic_obs.detach()
-        last_values = self.actor_critic.evaluate(aug_last_critic_obs).detach()
+    def compute_returns(self, obs_dict):
+        last_values = self.actor_critic.evaluate(obs_dict).detach()
         self.storage.compute_returns(last_values, self.gamma, self.lam)
 
     def update(self):
@@ -178,12 +176,17 @@ class AMPPPO:
         for sample, sample_amp_policy, sample_amp_expert in zip(generator, amp_policy_generator, amp_expert_generator):
 
                 obs_batch, critic_obs_batch, actions_batch, target_values_batch, advantages_batch, returns_batch, old_actions_log_prob_batch, \
-                    old_mu_batch, old_sigma_batch, hid_states_batch, masks_batch = sample
-                aug_obs_batch = obs_batch.detach()
-                self.actor_critic.act(aug_obs_batch, masks=masks_batch, hidden_states=hid_states_batch[0])
+                    old_mu_batch, old_sigma_batch, hid_states_batch, masks_batch, proprio_hist_batch = sample
+
+                obs_dict_batch = {
+                    'obs': obs_batch,
+                    'privileged_obs': critic_obs_batch,
+                    'proprio_hist': proprio_hist_batch,
+                }
+
+                self.actor_critic.act(obs_dict_batch, masks=masks_batch, hidden_states=hid_states_batch[0])
                 actions_log_prob_batch = self.actor_critic.get_actions_log_prob(actions_batch)
-                aug_critic_obs_batch = critic_obs_batch.detach()
-                value_batch = self.actor_critic.evaluate(aug_critic_obs_batch, masks=masks_batch, hidden_states=hid_states_batch[1])
+                value_batch = self.actor_critic.evaluate(obs_dict_batch, masks=masks_batch, hidden_states=hid_states_batch[1])
                 mu_batch = self.actor_critic.action_mean
                 sigma_batch = self.actor_critic.action_std
                 entropy_batch = self.actor_critic.entropy

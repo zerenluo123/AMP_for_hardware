@@ -127,8 +127,13 @@ class ActorCritic(nn.Module):
         std = self.std.to(mean.device)
         self.distribution = Normal(mean, mean*0. + std)
 
-    def act(self, observations, **kwargs):
-        self.update_distribution(observations)
+    # def act(self, observations, **kwargs):
+    #     self.update_distribution(observations)
+    #     return self.distribution.sample()
+
+    def act(self, obs_dict, **kwargs):
+        mean, std, _ = self._actor_critic(obs_dict)
+        self.distribution = Normal(mean, mean*0. + std)
         return self.distribution.sample()
     
     def get_actions_log_prob(self, actions):
@@ -138,10 +143,28 @@ class ActorCritic(nn.Module):
         actions_mean = self.actor(observations)
         return actions_mean
 
-    def evaluate(self, critic_observations, **kwargs):
-        value = self.critic(critic_observations)
+    # def evaluate(self, critic_observations, **kwargs):
+    #     value = self.critic(critic_observations)
+    #     return value
+
+    def evaluate(self, obs_dict, **kwargs):
+        _, _, value = self._actor_critic(obs_dict)
         return value
 
+
+    def _actor_critic(self, obs_dict):
+        obs = obs_dict['obs']
+        obs_privileged = obs_dict['privileged_obs']
+        obs_his = obs_dict['proprio_hist']
+
+        actor_obs = obs
+        critic_obs = obs_privileged
+
+        mu = self.actor(actor_obs)
+        value = self.critic(critic_obs)
+        sigma = self.std.to(mu.device)
+
+        return mu, mu * 0 + sigma, value
 
 def get_activation(act_name):
     if act_name == "elu":
