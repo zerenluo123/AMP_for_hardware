@@ -163,6 +163,12 @@ class AliengoAMPCfg( LeggedRobotCfg ):
 
 class AliengoAMPCfgPPO( LeggedRobotCfgPPO ):
     runner_class_name = 'AMPOnPolicyRunner'
+
+    class policy( LeggedRobotCfgPPO.policy ):
+        class hist_encoder:
+            include_history_steps = AliengoAMPCfg.env.include_history_steps
+            priv_mlp_units = [258, 128, 3]
+
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
         amp_replay_buffer_size = 1000000

@@ -91,6 +91,9 @@ class AMPPPO:
         self.optimizer = optim.Adam(params, lr=learning_rate)
         self.transition = RolloutStorage.Transition()
 
+        # ! Encoder MLP Optimizer
+        self.optimizer_encoder = optim.Adam(self.actor_critic.hist_encoder.parameters(), lr=learning_rate)
+
         # PPO parameters
         self.clip_param = clip_param
         self.num_learning_epochs = num_learning_epochs

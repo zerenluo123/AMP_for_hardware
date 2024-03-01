@@ -29,11 +29,34 @@
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
 import numpy as np
+from termcolor import cprint
 
 import torch
 import torch.nn as nn
 from torch.distributions import Normal
 from torch.nn.modules import rnn
+
+class HistEncoder(nn.Module):
+    def __init__(self, num_encoder_obs, encoder_hidden_dims):
+        super().__init__()
+
+        self.encoder = nn.Sequential(
+            nn.Linear(num_encoder_obs, encoder_hidden_dims[0]),
+            nn.ReLU(),
+            nn.Linear(encoder_hidden_dims[0], encoder_hidden_dims[1]),
+            nn.ReLU(),
+            nn.Linear(encoder_hidden_dims[1], encoder_hidden_dims[2]),
+            nn.Tanh(),
+        )
+
+    def forward(self, obs_his):
+        """
+        Encodes proprioceptive observation history
+        Input:
+            obs_his: history of observation
+        """
+        return self.encoder(obs_his)
+
 
 class ActorCritic(nn.Module):
     is_recurrent = False
@@ -52,15 +75,21 @@ class ActorCritic(nn.Module):
 
         activation = get_activation(activation)
 
-        mlp_input_dim_a = num_actor_obs
-        mlp_input_dim_c = num_critic_obs
-
-        # ---- Priv Info ----
+        # ---- Privileged information ----
         self.num_actor_input = num_actor_obs
+        self.num_critic_input = num_critic_obs
+
+        self.history_len = kwargs['hist_encoder']['include_history_steps']
+        self.num_encoder_input = num_actor_obs * self.history_len
+        self.encoder_mlp_unit = kwargs['hist_encoder']['priv_mlp_units']
+
+        # History Encoder
+        self.hist_encoder = HistEncoder(self.num_encoder_input, self.encoder_mlp_unit)
+        cprint(f"Encoder MLP: {self.hist_encoder}", 'green', attrs=['bold'])
 
         # Policy
         actor_layers = []
-        actor_layers.append(nn.Linear(mlp_input_dim_a, actor_hidden_dims[0]))
+        actor_layers.append(nn.Linear(self.num_actor_input, actor_hidden_dims[0]))
         actor_layers.append(activation)
         for l in range(len(actor_hidden_dims)):
             if l == len(actor_hidden_dims) - 1:
@@ -72,7 +101,7 @@ class ActorCritic(nn.Module):
 
         # Value function
         critic_layers = []
-        critic_layers.append(nn.Linear(mlp_input_dim_c, critic_hidden_dims[0]))
+        critic_layers.append(nn.Linear(self.num_critic_input, critic_hidden_dims[0]))
         critic_layers.append(activation)
         for l in range(len(critic_hidden_dims)):
             if l == len(critic_hidden_dims) - 1:
@@ -82,8 +111,8 @@ class ActorCritic(nn.Module):
                 critic_layers.append(activation)
         self.critic = nn.Sequential(*critic_layers)
 
-        print(f"Actor MLP: {self.actor}")
-        print(f"Critic MLP: {self.critic}")
+        cprint(f"Actor MLP: {self.actor}", 'cyan', attrs=['bold'])
+        cprint(f"Critic MLP: {self.critic}", 'cyan', attrs=['bold'])
 
         # Action noise
         self.fixed_std = fixed_std
@@ -132,7 +161,7 @@ class ActorCritic(nn.Module):
     #     return self.distribution.sample()
 
     def act(self, obs_dict, **kwargs):
-        mean, std, _ = self._actor_critic(obs_dict)
+        mean, std, _, _ = self._actor_critic(obs_dict)
         self.distribution = Normal(mean, mean*0. + std)
         return self.distribution.sample()
     
@@ -148,9 +177,11 @@ class ActorCritic(nn.Module):
     #     return value
 
     def evaluate(self, obs_dict, **kwargs):
-        _, _, value = self._actor_critic(obs_dict)
+        _, _, value, _ = self._actor_critic(obs_dict)
         return value
 
+    def predict_entrinsic(self, obs_dict, **kwargs):
+        _, _, _, extrin = self._actor_critic(obs_dict)
 
     def _actor_critic(self, obs_dict):
         obs = obs_dict['obs']
@@ -159,12 +190,13 @@ class ActorCritic(nn.Module):
 
         actor_obs = obs
         critic_obs = obs_privileged
+        extrin_en = self.hist_encoder(obs_his) # extrinsic of encoder
 
         mu = self.actor(actor_obs)
         value = self.critic(critic_obs)
         sigma = self.std.to(mu.device)
 
-        return mu, mu * 0 + sigma, value
+        return mu, mu * 0 + sigma, value, extrin_en
 
 def get_activation(act_name):
     if act_name == "elu":
