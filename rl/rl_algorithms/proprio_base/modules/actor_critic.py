@@ -182,6 +182,7 @@ class ActorCritic(nn.Module):
 
     def predict_entrinsic(self, obs_dict, **kwargs):
         _, _, _, extrin = self._actor_critic(obs_dict)
+        return extrin
 
     def _actor_critic(self, obs_dict):
         obs = obs_dict['obs']

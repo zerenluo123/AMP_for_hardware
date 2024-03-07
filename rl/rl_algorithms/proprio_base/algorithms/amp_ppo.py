@@ -36,6 +36,9 @@ from ..modules import ActorCritic
 from ..storage import RolloutStorage
 from ..storage.replay_buffer import ReplayBuffer
 
+import torch.nn.functional as F
+from termcolor import cprint
+
 class AMPPPO:
     actor_critic: ActorCritic
     def __init__(self,
@@ -82,8 +85,15 @@ class AMPPPO:
         self.storage = None # initialized later
 
         # Optimizer for policy and discriminator.
+        actor_critic_parameters = []
+        for name, param in self.actor_critic.named_parameters():
+            if 'actor' in name or 'critic' in name:
+                cprint(f"Add parameter {name} from actor critic", 'green')
+                actor_critic_parameters.append(param)
+
         params = [
-            {'params': self.actor_critic.parameters(), 'name': 'actor_critic'},
+            # {'params': self.actor_critic.parameters(), 'name': 'actor_critic'},
+            {'params': actor_critic_parameters, 'name': 'actor_critic'},
             {'params': self.discriminator.trunk.parameters(),
              'weight_decay': 10e-4, 'name': 'amp_trunk'},
             {'params': self.discriminator.amp_linear.parameters(),
@@ -163,6 +173,8 @@ class AMPPPO:
         mean_grad_pen_loss = 0
         mean_policy_pred = 0
         mean_expert_pred = 0
+        mean_vel_loss = 0 # velocity estimation
+
         if self.actor_critic.is_recurrent:
             generator = self.storage.reccurent_mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
         else:
@@ -255,6 +267,17 @@ class AMPPPO:
                     self.value_loss_coef * value_loss -
                     self.entropy_coef * entropy_batch.mean() +
                     amp_loss + grad_pen_loss)
+
+                # ! get privileged information from the critic obs (already scaled in env)
+                real_vel_scaled = critic_obs_batch[:, 0:3]
+
+                # ! get predicted entrinsic
+                extrin_batch = self.actor_critic.predict_entrinsic(obs_dict_batch)
+                predicted_vel_scaled = extrin_batch[:, 0:3]
+
+                # ! calculate loss related to the privileged information
+                vel_loss = F.mse_loss(predicted_vel_scaled, real_vel_scaled.detach())
+                loss_encoder = vel_loss
 
                 # Gradient step
                 self.optimizer.zero_grad()
