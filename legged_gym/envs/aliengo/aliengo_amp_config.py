@@ -180,7 +180,7 @@ class AliengoAMPCfgPPO( LeggedRobotCfgPPO ):
         experiment_name = 'aliengo_amp_example'
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
-        max_iterations = 25000 # number of policy updates
+        max_iterations = 5000 # number of policy updates
 
         amp_reward_coef = 2.0
         amp_motion_files = MOTION_FILES

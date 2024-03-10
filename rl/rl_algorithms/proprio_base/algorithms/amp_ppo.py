@@ -85,15 +85,20 @@ class AMPPPO:
         self.storage = None # initialized later
 
         # Optimizer for policy and discriminator.
-        actor_critic_parameters = []
+        self.actor_critic_parameters = []
+        self.hist_encoder_parameters = []
         for name, param in self.actor_critic.named_parameters():
-            if 'actor' in name or 'critic' in name:
-                cprint(f"Add parameter {name} from actor critic", 'green')
-                actor_critic_parameters.append(param)
+            if 'hist_encoder' not in name:
+                cprint(f"Add parameter {name} into AC optimizer", 'green')
+                self.actor_critic_parameters.append(param)
+            else:
+                cprint(f"Add parameter {name} into Encoder optimizer", 'blue')
+                self.hist_encoder_parameters.append(param)
 
+        # ! Actor critic MLP Optimizer
         params = [
             # {'params': self.actor_critic.parameters(), 'name': 'actor_critic'},
-            {'params': actor_critic_parameters, 'name': 'actor_critic'},
+            {'params': self.actor_critic_parameters, 'name': 'actor_critic'},
             {'params': self.discriminator.trunk.parameters(),
              'weight_decay': 10e-4, 'name': 'amp_trunk'},
             {'params': self.discriminator.amp_linear.parameters(),
@@ -102,7 +107,7 @@ class AMPPPO:
         self.transition = RolloutStorage.Transition()
 
         # ! Encoder MLP Optimizer
-        self.optimizer_encoder = optim.Adam(self.actor_critic.hist_encoder.parameters(), lr=learning_rate)
+        self.optimizer_encoder = optim.Adam(self.hist_encoder_parameters, lr=learning_rate)
 
         # PPO parameters
         self.clip_param = clip_param
@@ -282,7 +287,7 @@ class AMPPPO:
                 # Gradient step
                 self.optimizer.zero_grad()
                 loss.backward()
-                nn.utils.clip_grad_norm_(self.actor_critic.parameters(), self.max_grad_norm)
+                nn.utils.clip_grad_norm_(self.actor_critic_parameters, self.max_grad_norm)
                 self.optimizer.step()
 
                 if not self.actor_critic.fixed_std and self.min_std is not None:

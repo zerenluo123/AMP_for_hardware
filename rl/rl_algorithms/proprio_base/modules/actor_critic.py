@@ -46,7 +46,6 @@ class HistEncoder(nn.Module):
             nn.Linear(encoder_hidden_dims[0], encoder_hidden_dims[1]),
             nn.ReLU(),
             nn.Linear(encoder_hidden_dims[1], encoder_hidden_dims[2]),
-            nn.Tanh(),
         )
 
     def forward(self, obs_his):
@@ -83,9 +82,9 @@ class ActorCritic(nn.Module):
         self.num_encoder_input = num_actor_obs * self.history_len
         self.encoder_mlp_unit = kwargs['hist_encoder']['priv_mlp_units']
 
-        # History Encoder
-        self.hist_encoder = HistEncoder(self.num_encoder_input, self.encoder_mlp_unit)
-        cprint(f"Encoder MLP: {self.hist_encoder}", 'green', attrs=['bold'])
+        # # History Encoder
+        # self.hist_encoder = HistEncoder(self.num_encoder_input, self.encoder_mlp_unit)
+        # cprint(f"Encoder MLP: {self.hist_encoder}", 'green', attrs=['bold'])
 
         # Policy
         actor_layers = []
@@ -113,6 +112,10 @@ class ActorCritic(nn.Module):
 
         cprint(f"Actor MLP: {self.actor}", 'cyan', attrs=['bold'])
         cprint(f"Critic MLP: {self.critic}", 'cyan', attrs=['bold'])
+
+        # History Encoder
+        self.hist_encoder = HistEncoder(self.num_encoder_input, self.encoder_mlp_unit)
+        cprint(f"Encoder MLP: {self.hist_encoder}", 'green', attrs=['bold'])
 
         # Action noise
         self.fixed_std = fixed_std
