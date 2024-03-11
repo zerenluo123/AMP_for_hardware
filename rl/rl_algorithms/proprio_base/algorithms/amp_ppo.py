@@ -303,14 +303,17 @@ class AMPPPO:
                 mean_grad_pen_loss += grad_pen_loss.item()
                 mean_policy_pred += policy_d.mean().item()
                 mean_expert_pred += expert_d.mean().item()
+                mean_vel_loss += vel_loss.item()
 
         num_updates = self.num_learning_epochs * self.num_mini_batches
         mean_value_loss /= num_updates
         mean_surrogate_loss /= num_updates
         mean_amp_loss /= num_updates
         mean_grad_pen_loss /= num_updates
+        mean_vel_loss /= num_updates
+
         mean_policy_pred /= num_updates
         mean_expert_pred /= num_updates
         self.storage.clear()
 
-        return mean_value_loss, mean_surrogate_loss, mean_amp_loss, mean_grad_pen_loss, mean_policy_pred, mean_expert_pred
+        return mean_value_loss, mean_surrogate_loss, mean_amp_loss, mean_grad_pen_loss, mean_vel_loss, mean_policy_pred, mean_expert_pred

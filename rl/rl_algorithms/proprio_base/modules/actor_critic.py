@@ -195,6 +195,7 @@ class ActorCritic(nn.Module):
         actor_obs = obs
         critic_obs = obs_privileged
         extrin_en = self.hist_encoder(obs_his) # extrinsic of encoder
+        # actor_obs = torch.cat([extrin_en, obs], dim=-1)  ## 45 + 3
 
         mu = self.actor(actor_obs)
         value = self.critic(critic_obs)
