@@ -213,6 +213,13 @@ class LeggedRobotCfg(BaseConfig):
             default_buffer_size_multiplier = 5
             contact_collection = 2 # 0: never, 1: last sub-step, 2: all sub-steps (default=2)
 
+    class privileged_info:
+        enable_motor_strength = False
+        enable_disturbance_force = False
+        enable_foot_contact = False
+        enable_foot_height = False
+
+
 class LeggedRobotCfgPPO(BaseConfig):
     seed = 1
     runner_class_name = 'OnPolicyRunner'

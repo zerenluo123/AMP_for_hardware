@@ -35,6 +35,7 @@ import numpy as np
 import torch
 
 from legged_gym.envs.base import observation_buffer
+from termcolor import cprint
 
 
 # Base class for RL tasks
@@ -69,6 +70,11 @@ class BaseTask():
         # optimization flags for pytorch JIT
         torch._C._jit_set_profiling_mode(False)
         torch._C._jit_set_profiling_executor(False)
+
+        # extend privileged obs length
+        if cfg.privileged_info.enable_foot_contact:
+            self.num_privileged_obs += 4
+        cprint(f"Dimension of privileged observation: {self.num_privileged_obs} ", 'green', attrs=['bold'])
 
         # allocate buffers
         self.obs_buf = torch.zeros(self.num_envs, self.num_obs, device=self.device, dtype=torch.float)

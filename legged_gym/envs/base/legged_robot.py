@@ -320,17 +320,23 @@ class LeggedRobot(BaseTask):
             heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights, -1, 1.) * self.obs_scales.height_measurements
             self.privileged_obs_buf = torch.cat((self.privileged_obs_buf, heights), dim=-1)
 
+        # add other privileged information
+        if self.cfg.privileged_info.enable_foot_contact:
+            contact = self.contact_forces[:, self.feet_indices, 2] > 1.
+            self.privileged_obs_buf = torch.cat((self.privileged_obs_buf, contact), dim=-1)
+
         # add noise if needed
         if self.add_noise:
             self.privileged_obs_buf += (2 * torch.rand_like(self.privileged_obs_buf) - 1) * self.noise_scale_vec
 
         # Remove velocity observations from policy observation.
-        if self.num_obs == self.num_privileged_obs - 6:
-            self.obs_buf = self.privileged_obs_buf[:, 6:]
-        if self.num_obs == self.num_privileged_obs - 3:
-            self.obs_buf = self.privileged_obs_buf[:, 3:]
-        else:
-            self.obs_buf = torch.clone(self.privileged_obs_buf)
+        # if self.num_obs == self.num_privileged_obs - 6:
+        #     self.obs_buf = self.privileged_obs_buf[:, 6:]
+        # if self.num_obs == self.num_privileged_obs - 3:
+        #     self.obs_buf = self.privileged_obs_buf[:, 3:]
+        # else:
+        #     self.obs_buf = torch.clone(self.privileged_obs_buf)
+        self.obs_buf = self.privileged_obs_buf[:, 3:3+45]
 
         # ! add proprioceptive observation history
         # get previous step's obs

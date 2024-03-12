@@ -161,6 +161,12 @@ class AliengoAMPCfg( LeggedRobotCfg ):
             ang_vel_yaw = [-1.57, 1.57]    # min max [rad/s]
             heading = [-3.14, 3.14]
 
+    class privileged_info( LeggedRobotCfg.privileged_info ):
+        enable_motor_strength = False
+        enable_disturbance_force = False
+        enable_foot_contact = True
+        enable_foot_height = False
+
 class AliengoAMPCfgPPO( LeggedRobotCfgPPO ):
     runner_class_name = 'ProprioBaseAMPOnPolicyRunner'
 
