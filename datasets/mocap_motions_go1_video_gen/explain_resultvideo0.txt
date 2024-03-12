@@ -1,0 +1,24 @@
+videoX.txt中保存的为字典
+"FrameDuration": 保存的是图像的时间间隔，单位为S 
+可以理解为机器人姿态数据更新的时间间隔
+
+数据存在“Frame”下，每行是一张图像对应的机器人位姿信息
+
+每行一共61维度，有这些量组成[curr_pose, del_linear_vel, del_angular_vel, joint_velocity, toe_velocity] 
+
+curr_pose 为31维度 [0:31]
+del_linear_vel 为3维  [31:34]  #机器人的速度
+dek_angular_vel 为3维 [34:37]   #机器人的角速度
+joint_velocity 为12维 [37:49]   #机器人12个关节的角速度
+toe_velocity 为12维 [49:]       #机器人四个末端关节toe速度
+
+12个关节的顺序为：FL, FR, RL, RR  顺序为thigh calf foot
+4个toe的顺序为：FL, FR, RL, RR
+
+curr_pose 可以[root_pos,             # 3  三位位置
+               root_rot,             # 4  四元数
+               joint_pose,           # 12 当前机器人的关节角度
+               tar_toe_pos_local]    # 12 当前机器人的四足位置
+
+
+
