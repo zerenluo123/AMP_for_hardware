@@ -162,7 +162,7 @@ class AliengoAMPCfg( LeggedRobotCfg ):
             heading = [-3.14, 3.14]
 
 class AliengoAMPCfgPPO( LeggedRobotCfgPPO ):
-    runner_class_name = 'AMPOnPolicyRunner'
+    runner_class_name = 'ProprioBaseAMPOnPolicyRunner'
 
     class policy( LeggedRobotCfgPPO.policy ):
         class hist_encoder:

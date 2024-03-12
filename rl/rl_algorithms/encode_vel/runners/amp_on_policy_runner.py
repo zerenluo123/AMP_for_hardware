@@ -46,7 +46,7 @@ from ..algorithms.amp_discriminator import AMPDiscriminator
 from rl.datasets.motion_loader import AMPLoader
 from rl.utils.utils import Normalizer
 
-class ProprioBaseAMPOnPolicyRunner:
+class EncodeVelAMPOnPolicyRunner:
 
     def __init__(self,
                  env: VecEnv,
@@ -179,7 +179,7 @@ class ProprioBaseAMPOnPolicyRunner:
                 start = stop
                 self.alg.compute_returns(obs_dict)
             
-            mean_value_loss, mean_surrogate_loss, mean_amp_loss, mean_grad_pen_loss, mean_policy_pred, mean_expert_pred = self.alg.update()
+            mean_value_loss, mean_surrogate_loss, mean_amp_loss, mean_grad_pen_loss, mean_vel_loss, mean_policy_pred, mean_expert_pred = self.alg.update()
             stop = time.time()
             learn_time = stop - start
             if self.log_dir is not None:
@@ -217,6 +217,7 @@ class ProprioBaseAMPOnPolicyRunner:
         self.writer.add_scalar('Loss/surrogate', locs['mean_surrogate_loss'], locs['it'])
         self.writer.add_scalar('Loss/AMP', locs['mean_amp_loss'], locs['it'])
         self.writer.add_scalar('Loss/AMP_grad', locs['mean_grad_pen_loss'], locs['it'])
+        self.writer.add_scalar('Loss/velocity_estimation', locs['mean_vel_loss'], locs['it'])
         self.writer.add_scalar('Loss/learning_rate', self.alg.learning_rate, locs['it'])
         self.writer.add_scalar('Policy/mean_noise_std', mean_std.item(), locs['it'])
         self.writer.add_scalar('Perf/total_fps', fps, locs['it'])

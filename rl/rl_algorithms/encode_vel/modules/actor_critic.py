@@ -75,7 +75,7 @@ class ActorCritic(nn.Module):
         activation = get_activation(activation)
 
         # ---- Privileged information ----
-        self.num_actor_input = num_actor_obs
+        self.num_actor_input = num_actor_obs + 3
         self.num_critic_input = num_critic_obs
 
         self.history_len = kwargs['hist_encoder']['include_history_steps']
@@ -196,9 +196,10 @@ class ActorCritic(nn.Module):
         obs_privileged = obs_dict['privileged_obs']
         obs_his = obs_dict['proprio_hist']
 
-        actor_obs = obs
+        # actor_obs = obs
         critic_obs = obs_privileged
         extrin_en = self.hist_encoder(obs_his) # extrinsic of encoder
+        actor_obs = torch.cat([extrin_en, obs], dim=-1)  ## 45 + 3
 
         mu = self.actor(actor_obs)
         value = self.critic(critic_obs)

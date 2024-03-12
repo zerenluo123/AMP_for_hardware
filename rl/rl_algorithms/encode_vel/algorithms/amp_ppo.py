@@ -97,8 +97,8 @@ class AMPPPO:
 
         # ! Actor critic MLP Optimizer
         params = [
-            # {'params': self.actor_critic.parameters(), 'name': 'actor_critic'},
-            {'params': self.actor_critic_parameters, 'name': 'actor_critic'},
+            {'params': self.actor_critic.parameters(), 'name': 'actor_critic'},
+            # {'params': self.actor_critic_parameters, 'name': 'actor_critic'},
             {'params': self.discriminator.trunk.parameters(),
              'weight_decay': 10e-4, 'name': 'amp_trunk'},
             {'params': self.discriminator.amp_linear.parameters(),
@@ -284,10 +284,14 @@ class AMPPPO:
                 vel_loss = F.mse_loss(predicted_vel_scaled, real_vel_scaled.detach())
                 loss_encoder = vel_loss
 
+                weighted_loss = loss + loss_encoder
+
                 # Gradient step
                 self.optimizer.zero_grad()
-                loss.backward()
-                nn.utils.clip_grad_norm_(self.actor_critic_parameters, self.max_grad_norm)
+                # loss.backward()
+                # nn.utils.clip_grad_norm_(self.actor_critic_parameters, self.max_grad_norm)
+                weighted_loss.backward()
+                nn.utils.clip_grad_norm_(self.actor_critic.parameters(), self.max_grad_norm)
                 self.optimizer.step()
 
                 if not self.actor_critic.fixed_std and self.min_std is not None:
@@ -303,14 +307,17 @@ class AMPPPO:
                 mean_grad_pen_loss += grad_pen_loss.item()
                 mean_policy_pred += policy_d.mean().item()
                 mean_expert_pred += expert_d.mean().item()
+                mean_vel_loss += vel_loss.item()
 
         num_updates = self.num_learning_epochs * self.num_mini_batches
         mean_value_loss /= num_updates
         mean_surrogate_loss /= num_updates
         mean_amp_loss /= num_updates
         mean_grad_pen_loss /= num_updates
+        mean_vel_loss /= num_updates
+
         mean_policy_pred /= num_updates
         mean_expert_pred /= num_updates
         self.storage.clear()
 
-        return mean_value_loss, mean_surrogate_loss, mean_amp_loss, mean_grad_pen_loss, mean_policy_pred, mean_expert_pred
+        return mean_value_loss, mean_surrogate_loss, mean_amp_loss, mean_grad_pen_loss, mean_vel_loss, mean_policy_pred, mean_expert_pred

@@ -153,6 +153,8 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
             cfg_train.runner.export_policy = args.export_policy
         if args.export_onnx_policy:
             cfg_train.runner.export_onnx_policy = args.export_onnx_policy
+        if args.runner_class_name:
+            cfg_train.runner_class_name = args.runner_class_name
     return env_cfg, cfg_train
 
 def get_args():
@@ -180,6 +182,9 @@ def get_args():
          "help": "whether or not convert the network to jit(C++)."},
         {"name": "--export_onnx_policy", "action": "store_true", "default": False,
          "help": "whether or not convert the network to onnx(C++)."},
+
+        # ! selection of the algorithm
+        {"name": "--runner_class_name", "type": str, "default": "debug", "help": "which algorithm / runner you select"},
 
     ]
     # parse arguments

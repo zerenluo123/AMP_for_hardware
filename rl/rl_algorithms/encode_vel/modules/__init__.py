@@ -28,5 +28,5 @@
 #
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
-from .on_policy_runner import OnPolicyRunner
-from .amp_on_policy_runner import ProprioBaseAMPOnPolicyRunner
+from .actor_critic import ActorCritic
+from .actor_critic_recurrent import ActorCriticRecurrent

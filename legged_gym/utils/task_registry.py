@@ -34,8 +34,10 @@ from typing import Tuple
 import torch
 import numpy as np
 
+# ! different algorithms
 from rl.env import VecEnv
-from rl.rl_algorithms.proprio_base.runners import OnPolicyRunner, AMPOnPolicyRunner
+from rl.rl_algorithms.encode_vel.runners import OnPolicyRunner, EncodeVelAMPOnPolicyRunner
+from rl.rl_algorithms.proprio_base.runners import OnPolicyRunner, ProprioBaseAMPOnPolicyRunner
 
 from legged_gym import LEGGED_GYM_ROOT_DIR, LEGGED_GYM_ENVS_DIR
 from .helpers import get_args, update_cfg_from_args, class_to_dict, get_load_path, set_seed, parse_sim_params
@@ -149,7 +151,7 @@ class TaskRegistry():
             os.makedirs(log_dir, exist_ok=True)
             save_item = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', name.rstrip('_amp'), name + '_config.py')
             copyfile(save_item, log_dir + '/amp_config.py')
-        
+
         # print(train_cfg.runner_class_name)
         runner_class = eval(train_cfg.runner_class_name)
         train_cfg_dict = class_to_dict(train_cfg)
