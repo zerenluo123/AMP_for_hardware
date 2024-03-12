@@ -81,7 +81,7 @@ def play(args):
     img_idx = 0
 
     for i in range(10*int(env.max_episode_length)):
-        actions = policy(obs_dict['obs'].detach())
+        actions = policy(obs_dict)
         obs_dict, rews, dones, infos, _, _ = env.step(actions.detach())
         if RECORD_FRAMES:
             if i % 2:

@@ -97,8 +97,8 @@ class AMPPPO:
 
         # ! Actor critic MLP Optimizer
         params = [
-            # {'params': self.actor_critic.parameters(), 'name': 'actor_critic'},
-            {'params': self.actor_critic_parameters, 'name': 'actor_critic'},
+            {'params': self.actor_critic.parameters(), 'name': 'actor_critic'},
+            # {'params': self.actor_critic_parameters, 'name': 'actor_critic'},
             {'params': self.discriminator.trunk.parameters(),
              'weight_decay': 10e-4, 'name': 'amp_trunk'},
             {'params': self.discriminator.amp_linear.parameters(),
@@ -284,10 +284,14 @@ class AMPPPO:
                 vel_loss = F.mse_loss(predicted_vel_scaled, real_vel_scaled.detach())
                 loss_encoder = vel_loss
 
+                weighted_loss = loss + loss_encoder
+
                 # Gradient step
                 self.optimizer.zero_grad()
-                loss.backward()
-                nn.utils.clip_grad_norm_(self.actor_critic_parameters, self.max_grad_norm)
+                # loss.backward()
+                # nn.utils.clip_grad_norm_(self.actor_critic_parameters, self.max_grad_norm)
+                weighted_loss.backward()
+                nn.utils.clip_grad_norm_(self.actor_critic.parameters(), self.max_grad_norm)
                 self.optimizer.step()
 
                 if not self.actor_critic.fixed_std and self.min_std is not None:

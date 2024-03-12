@@ -75,7 +75,7 @@ class ActorCritic(nn.Module):
         activation = get_activation(activation)
 
         # ---- Privileged information ----
-        self.num_actor_input = num_actor_obs
+        self.num_actor_input = num_actor_obs + 3
         self.num_critic_input = num_critic_obs
 
         self.history_len = kwargs['hist_encoder']['include_history_steps']
@@ -171,8 +171,12 @@ class ActorCritic(nn.Module):
     def get_actions_log_prob(self, actions):
         return self.distribution.log_prob(actions).sum(dim=-1)
 
-    def act_inference(self, observations):
-        actions_mean = self.actor(observations)
+    # def act_inference(self, observations):
+    #     actions_mean = self.actor(observations)
+    #     return actions_mean
+
+    def act_inference(self, obs_dict):
+        actions_mean, _, _, _ = self._actor_critic(obs_dict)
         return actions_mean
 
     # def evaluate(self, critic_observations, **kwargs):
@@ -192,10 +196,10 @@ class ActorCritic(nn.Module):
         obs_privileged = obs_dict['privileged_obs']
         obs_his = obs_dict['proprio_hist']
 
-        actor_obs = obs
+        # actor_obs = obs
         critic_obs = obs_privileged
         extrin_en = self.hist_encoder(obs_his) # extrinsic of encoder
-        # actor_obs = torch.cat([extrin_en, obs], dim=-1)  ## 45 + 3
+        actor_obs = torch.cat([extrin_en, obs], dim=-1)  ## 45 + 3
 
         mu = self.actor(actor_obs)
         value = self.critic(critic_obs)
