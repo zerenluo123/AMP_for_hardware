@@ -80,7 +80,7 @@ class AliengoAMPCfg( LeggedRobotCfg ):
         actuator_net_file = "{LEGGED_GYM_ROOT_DIR}/resources/actuator_nets/unitree_aliengo_2rd_f100_it4000_ly2_mlp_dec27_dec28.pt"
 
     class terrain( LeggedRobotCfg.terrain ):
-        mesh_type = 'plane'
+        mesh_type = 'trimesh'
         measure_heights = False
 
     class asset( LeggedRobotCfg.asset ):

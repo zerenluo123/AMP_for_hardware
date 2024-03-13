@@ -11,7 +11,7 @@ EXTRA_ARGS_SLUG=${EXTRA_ARGS// /_}
 echo extra "${EXTRA_ARGS}"
 
 CUDA_VISIBLE_DEVICES=${GPUS} \
-python legged_gym/scripts/train.py --task=aliengo_amp --headless --seed=${SEED} \
+python legged_gym/scripts/train.py --task=aliengo_amp --seed=${SEED} \
 --output_name="${CACHE}" \
 --runner_class_name=ProprioBaseAMPOnPolicyRunner \
 ${EXTRA_ARGS}
