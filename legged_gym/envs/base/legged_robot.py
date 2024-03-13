@@ -409,6 +409,10 @@ class LeggedRobot(BaseTask):
         self.up_axis_idx = 2 # 2 for z, 1 for y -> adapt gravity accordingly
         self.sim = self.gym.create_sim(self.sim_device_id, self.graphics_device_id, self.physics_engine, self.sim_params)
         mesh_type = self.cfg.terrain.mesh_type
+        # ! timing for creating terrain
+        start = time()
+        print("*" * 80)
+        print("Start creating ground...")
         if mesh_type in ['heightfield', 'trimesh']:
             self.terrain = Terrain(self.cfg.terrain, self.num_envs)
         if mesh_type=='plane':
@@ -419,6 +423,8 @@ class LeggedRobot(BaseTask):
             self._create_trimesh()
         elif mesh_type is not None:
             raise ValueError("Terrain mesh type not recognised. Allowed types are [None, plane, heightfield, trimesh]")
+        print("Finished creating ground. Time taken {:.2f} s".format(time() - start))
+        print("*" * 80)
         self._create_envs()
 
     def set_camera(self, position, lookat):

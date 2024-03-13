@@ -73,10 +73,13 @@ class Terrain:
         
         self.heightsamples = self.height_field_raw
         if self.type=="trimesh":
+            print("Converting heightmap to trimesh...")
             self.vertices, self.triangles = terrain_utils.convert_heightfield_to_trimesh(   self.height_field_raw,
                                                                                             self.cfg.horizontal_scale,
                                                                                             self.cfg.vertical_scale,
                                                                                             self.cfg.slope_treshold)
+            print("Created {} vertices".format(self.vertices.shape[0]))
+            print("Created {} triangles".format(self.triangles.shape[0]))
     
     def randomized_terrain(self):
         for k in range(self.cfg.num_sub_terrains):
