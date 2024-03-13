@@ -49,7 +49,7 @@ MOCAP_MOTIONS = [
     # Output motion name, input file, frame start, frame end, motion weight.
     [
         "video0",
-        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/walk_joint_pos5_from_csv.txt".format(
-            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 1, 222, 1
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/walk_joint_pos5_from_csv_x2.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 0, 111, 1
     ],
 ]
