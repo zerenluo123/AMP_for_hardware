@@ -53,6 +53,28 @@ from .legged_robot_config import LeggedRobotCfg
 from rl.datasets.motion_loader import AMPLoader
 
 
+def euler_from_quaternion(quat_angle):
+    """
+    Convert a quaternion into euler angles (roll, pitch, yaw)
+    roll is rotation around x in radians (counterclockwise)
+    pitch is rotation around y in radians (counterclockwise)
+    yaw is rotation around z in radians (counterclockwise)
+    """
+    x = quat_angle[:, 0]; y = quat_angle[:, 1]; z = quat_angle[:, 2]; w = quat_angle[:, 3]
+    t0 = +2.0 * (w * x + y * z)
+    t1 = +1.0 - 2.0 * (x * x + y * y)
+    roll_x = torch.atan2(t0, t1)
+
+    t2 = +2.0 * (w * y - z * x)
+    t2 = torch.clip(t2, -1, 1)
+    pitch_y = torch.asin(t2)
+
+    t3 = +2.0 * (w * z + x * y)
+    t4 = +1.0 - 2.0 * (y * y + z * z)
+    yaw_z = torch.atan2(t3, t4)
+
+    return roll_x, pitch_y, yaw_z  # in radians
+
 class LeggedRobot(BaseTask):
     def __init__(self, cfg: LeggedRobotCfg, sim_params, physics_engine, sim_device, headless):
         """ Parses the provided config file,
@@ -198,6 +220,9 @@ class LeggedRobot(BaseTask):
         self.base_ang_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
         self.projected_gravity[:] = quat_rotate_inverse(self.base_quat, self.gravity_vec)
 
+        # ! euler angle
+        self.roll, self.pitch, self.yaw = euler_from_quaternion(self.base_quat)
+
         self._update_goals()
         self._post_physics_step_callback()
 
@@ -315,6 +340,10 @@ class LeggedRobot(BaseTask):
     def compute_observations(self):
         """ Computes observations
         """
+        # body orientation
+        self.delta_yaw = self.target_yaw - self.yaw
+        self.delta_next_yaw = self.next_target_yaw - self.yaw
+
 
         if self._get_commands_from_joystick:
           for event in pygame.event.get():
@@ -561,9 +590,9 @@ class LeggedRobot(BaseTask):
         # return self.env_goals.gather(1, (self.cur_goal_idx[:, None, None]+future).expand(-1, -1, self.env_goals.shape[-1])).squeeze(1)
 
         cur_goal_idx = self.cur_goal_idx[:, None, None]+future                  # which goal idx is reached now
-        cur_goal_idx = cur_goal_idx.expand(-1, -1, self.env_goals.shape[-1])    # expand the current goal idx by x,y,z (3 dimensions)
-        env_goal = self.env_goals.gather(1, cur_goal_idx).squeeze(1)
-        return env_goal
+        cur_goal_idx_3d = cur_goal_idx.expand(-1, -1, self.env_goals.shape[-1])    # expand the current goal idx by x,y,z (3 dimensions)
+        gather_cur_goals_3d = self.env_goals.gather(1, cur_goal_idx_3d).squeeze(1)
+        return gather_cur_goals_3d
 
     def _resample_commands(self, env_ids):
         """ Randommly select commands of some environments
@@ -1192,6 +1221,19 @@ class LeggedRobot(BaseTask):
         return heights.view(self.num_envs, -1) * self.terrain.cfg.vertical_scale
 
     #------------ reward functions----------------
+    #------------ goal tracking ------------
+    def _reward_tracking_goal_vel(self):
+        norm = torch.norm(self.target_pos_rel, dim=-1, keepdim=True)
+        target_vec_norm = self.target_pos_rel / (norm + 1e-5)
+        cur_vel = self.root_states[:, 7:9]
+        rew = torch.minimum(torch.sum(target_vec_norm * cur_vel, dim=-1), self.commands[:, 0]) / (self.commands[:, 0] + 1e-5)
+        return rew
+
+    def _reward_tracking_yaw(self):
+        rew = torch.exp(-torch.abs(self.target_yaw - self.yaw))
+        return rew
+    #------------ goal tracking ------------
+
     def _reward_lin_vel_z(self):
         # Penalize z axis base linear velocity
         return torch.square(self.base_lin_vel[:, 2])
