@@ -56,7 +56,7 @@ class LeggedRobotCfg(BaseConfig):
         border_size = 5 # [m]
         height = [0.00, 0.00]
         downsampled_scale = 0.2
-        curriculum = True
+        curriculum = False
 
         static_friction = 1.0
         dynamic_friction = 1.0
@@ -92,7 +92,7 @@ class LeggedRobotCfg(BaseConfig):
         slope_treshold = 0.75 # slopes above this threshold will be corrected to vertical surfaces
         origin_zero_z = True
 
-        num_goals = 8
+        num_goals = 4
 
     class commands:
         curriculum = False

@@ -164,7 +164,7 @@ class AliengoAMPCfg( LeggedRobotCfg ):
     class privileged_info( LeggedRobotCfg.privileged_info ):
         enable_motor_strength = False
         enable_disturbance_force = False
-        enable_foot_contact = True
+        enable_foot_contact = False
         enable_foot_height = False
 
 class AliengoAMPCfgPPO( LeggedRobotCfgPPO ):

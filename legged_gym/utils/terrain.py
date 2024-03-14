@@ -165,7 +165,7 @@ class Terrain:
                                    stone_len=0.1 + 0.3 * difficulty,
                                    hurdle_height_range=[0.1 + 0.1 * difficulty, 0.15 + 0.25 * difficulty],
                                    pad_height=0,
-                                   x_range=[1.2, 2.2],
+                                   x_range=[4.4, 4.5],
                                    y_range=self.cfg.y_range,
                                    half_valid_width=[0.4, 0.8],
                                    flat=True,
@@ -270,7 +270,7 @@ def parkour_hurdle_terrain(terrain,
             terrain.height_field_raw[dis_x - stone_len // 2:dis_x + stone_len // 2, :mid_y + rand_y - half_valid_width] = 0
             terrain.height_field_raw[dis_x - stone_len // 2:dis_x + stone_len // 2, mid_y + rand_y + half_valid_width:] = 0
         last_dis_x = dis_x
-        goals[i + 1] = [dis_x - rand_x // 2, mid_y + rand_y]
+        goals[i + 1] = [dis_x, mid_y + rand_y]
     final_dis_x = dis_x + np.random.randint(dis_x_min, dis_x_max)
     # import ipdb; ipdb.set_trace()
     if final_dis_x > terrain.width:
@@ -278,7 +278,6 @@ def parkour_hurdle_terrain(terrain,
     goals[-1] = [final_dis_x, mid_y]
 
     terrain.goals = goals * terrain.horizontal_scale
-
     # terrain.height_field_raw[:, :max(mid_y-half_valid_width, 0)] = 0
     # terrain.height_field_raw[:, min(mid_y+half_valid_width, terrain.height_field_raw.shape[1]):] = 0
     # terrain.height_field_raw[:, :] = 0
