@@ -46,6 +46,9 @@ class LeggedRobotCfg(BaseConfig):
         reach_goal_delay = 0.1
         num_future_goal_obs = 2
 
+        # ! start config
+        randomize_start_pos = False
+
     class terrain:
         mesh_type = 'trimesh' # "heightfield" # none, plane, heightfield or trimesh
 

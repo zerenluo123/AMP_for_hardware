@@ -52,6 +52,7 @@ import legged_gym.utils.kinematics.urdf as pk
 from .legged_robot_config import LeggedRobotCfg
 from rl.datasets.motion_loader import AMPLoader
 
+from tqdm import tqdm
 
 def euler_from_quaternion(quat_angle):
     """
@@ -669,7 +670,7 @@ class LeggedRobot(BaseTask):
         Args:
             env_ids (List[int]): Environemnt ids
         """
-        self.dof_pos[env_ids] = self.default_dof_pos * torch_rand_float(0.5, 1.5, (len(env_ids), self.num_dof), device=self.device)
+        self.dof_pos[env_ids] = self.default_dof_pos + torch_rand_float(0., 0.9, (len(env_ids), self.num_dof), device=self.device)
         self.dof_vel[env_ids] = 0.
 
         env_ids_int32 = env_ids.to(dtype=torch.int32)
@@ -704,7 +705,8 @@ class LeggedRobot(BaseTask):
         if self.custom_origins:
             self.root_states[env_ids] = self.base_init_state
             self.root_states[env_ids, :3] += self.env_origins[env_ids]
-            self.root_states[env_ids, :2] += torch_rand_float(-1., 1., (len(env_ids), 2), device=self.device) # xy position within 1m of the center
+            if self.cfg.env.randomize_start_pos:
+                self.root_states[env_ids, :2] += torch_rand_float(-0.3, 0.3, (len(env_ids), 2), device=self.device) # xy position within 1m of the center
         else:
             self.root_states[env_ids] = self.base_init_state
             self.root_states[env_ids, :3] += self.env_origins[env_ids]
@@ -725,6 +727,7 @@ class LeggedRobot(BaseTask):
         # base position
         root_pos = AMPLoader.get_root_pos_batch(frames)
         root_pos[:, :2] = root_pos[:, :2] + self.env_origins[env_ids, :2]
+        # root_pos[:, :2] = self.env_origins[env_ids, :2]
         self.root_states[env_ids, :3] = root_pos
         root_orn = AMPLoader.get_root_rot_batch(frames)
         self.root_states[env_ids, 3:7] = root_orn
@@ -1042,7 +1045,10 @@ class LeggedRobot(BaseTask):
                                    requires_grad=False)
         self.d_gains = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device,
                                    requires_grad=False)
-        for i in range(self.num_envs):
+
+        # ! Create environments
+        print("Creating env...")
+        for i in tqdm(range(self.num_envs)):
             # create env instance
             env_handle = self.gym.create_env(self.sim, env_lower, env_upper, int(np.sqrt(self.num_envs)))
             pos = self.env_origins[i].clone()
