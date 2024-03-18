@@ -46,7 +46,7 @@ FORWARD_DIR = np.array([1, 0, 0])
 GROUND_URDF_FILENAME = "plane_implicit.urdf"
 
 # reference motion
-FRAME_DURATION = 0.01677
+FRAME_DURATION = 0.033
 REF_COORD_ROT = transformations.quaternion_from_euler(0.5 * np.pi, 0, 0)   # X,Y,Z
 REF_POS_OFFSET = np.array([0, 0, 0])
 REF_ROOT_ROT = transformations.quaternion_from_euler(0, 0, 0.47 * np.pi)
@@ -338,6 +338,7 @@ def load_ref_data(JOINT_POS_FILENAME, FRAME_START, FRAME_END):
       print("joint_pos_data.shape",joint_pos_data.shape) #222,81
       for i in range(joint_pos_data.shape[1]//3):
           joint_pos_data[:,i*3+2] = -1*joint_pos_data[:,i*3+2]
+          #joint_pos_data[:,i*3] = -1*joint_pos_data[:,i*3]
   return joint_pos_data
 
 
@@ -372,12 +373,12 @@ def retarget_motion(robot, joint_pos_data):
 
     # Linear velocity in base frame.
     del_linear_vel = np.array((get_root_pos(next_pose) -
-                               get_root_pos(curr_pose))) / time_between_frames
+                               get_root_pos(curr_pose))) / time_between_frames  #[0:3]
     r = pybullet.getMatrixFromQuaternion(get_root_rot(curr_pose))
     del_linear_vel = np.matmul(del_linear_vel, np.array(r).reshape(3, 3))
 
     # Angular velocity in base frame.
-    curr_quat = get_root_rot(curr_pose)
+    curr_quat = get_root_rot(curr_pose)  #[3:7]
     next_quat = get_root_rot(next_pose)
     diff_quat = Quaternion.distance(
         Quaternion(curr_quat[3], curr_quat[0], curr_quat[1], curr_quat[2]),
@@ -404,10 +405,10 @@ def retarget_motion(robot, joint_pos_data):
 
     joint_velocity = np.array(
         get_joint_pose(next_pose) -
-        get_joint_pose(curr_pose)) / time_between_frames
+        get_joint_pose(curr_pose)) / time_between_frames    #[7:7+12]
     toe_velocity = np.array(
         get_tar_toe_pos_local(next_pose) -
-        get_tar_toe_pos_local(curr_pose)) / time_between_frames
+        get_tar_toe_pos_local(curr_pose)) / time_between_frames   #[19:19+12]
 
     curr_pose = np.concatenate([
         curr_pose, del_linear_vel, del_angular_vel, joint_velocity, toe_velocity

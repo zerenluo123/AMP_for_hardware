@@ -11,7 +11,7 @@ URDF_FILENAME = "{LEGGED_GYM_ROOT_DIR}/resources/robots/go1_description/urdf/go1
 OUTPUT_DIR = "{LEGGED_GYM_ROOT_DIR}/datasets/mocap_motions_go1_video_gen".format(
     LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
 
-REF_POS_SCALE = 1
+REF_POS_SCALE = 0.75  #10----1   18-5 -----0.8
 INIT_POS = np.array([0, 0, 0.32])
 INIT_ROT = np.array([0, 0, 0, 1.0])
 
@@ -24,9 +24,17 @@ SIM_ROOT_OFFSET = np.array([0, 0, -0.04])
 #    np.array([0, -0.2, 0.0]),
 #    np.array([0, 0.2, 0.0])
 #]
+#         10        #
 SIM_TOE_OFFSET_LOCAL = [
     np.array([0, 0.06, 0.0]),
     np.array([0, -0.06, 0.0]),
+    np.array([0, 0.03, 0.0]),
+    np.array([0, -0.03, 0.0])
+]
+#        18-5         #
+SIM_TOE_OFFSET_LOCAL = [
+    np.array([0, -0.0, 0.0]),
+    np.array([0, 0.0, 0.0]),
     np.array([0, 0.03, 0.0]),
     np.array([0, -0.03, 0.0])
 ]
@@ -47,9 +55,51 @@ HL_FOOT_NAME = "RL_foot"
 
 MOCAP_MOTIONS = [
     # Output motion name, input file, frame start, frame end, motion weight.
-    [
+
+   [
         "video0",
-        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/walk_joint_pos5_from_csv_x2.txt".format(
-            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 0, 111, 1
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 0, 210, 1
     ],
+       [
+        "video0",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 0, 210, 1
+    ],
+       [
+        "video0",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 0, 210, 1
+    ],
+       [
+        "video0",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 0, 210, 1
+    ],
+       [
+        "video0",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 0, 210, 1
+    ],
+       [
+        "video0",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 0, 210, 1
+    ],
+       [
+        "video0",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 0, 210, 1
+    ],
+       [
+        "video0",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 0, 210, 1
+    ],
+       [
+        "video0",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 0, 210, 1
+    ],
+
 ]
