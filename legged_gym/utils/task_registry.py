@@ -149,8 +149,11 @@ class TaskRegistry():
 
         if not train_cfg.runner.resume:
             os.makedirs(log_dir, exist_ok=True)
-            save_item = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', name.rstrip('_amp'), name + '_config.py')
-            copyfile(save_item, log_dir + '/amp_config.py')
+            save_item_config = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', name.rstrip('_amp'), name + '_config.py')
+            copyfile(save_item_config, log_dir + '/amp_config.py')
+
+            save_item_env = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', 'base', 'legged_robot.py')
+            copyfile(save_item_env, log_dir + '/legged_robot.py')
 
         # print(train_cfg.runner_class_name)
         runner_class = eval(train_cfg.runner_class_name)

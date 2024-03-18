@@ -165,7 +165,7 @@ class Terrain:
                                    stone_len=0.1 + 0.3 * difficulty,
                                    hurdle_height_range=[0.1 + 0.1 * difficulty, 0.15 + 0.25 * difficulty],
                                    pad_height=0,
-                                   x_range=[4.4, 4.5],
+                                   x_range=[4.0, 4.1],
                                    y_range=self.cfg.y_range,
                                    half_valid_width=[0.4, 0.8],
                                    flat=True,
@@ -223,7 +223,7 @@ def pit_terrain(terrain, depth, platform_size=1.):
     terrain.height_field_raw[x1:x2, y1:y2] = -depth
 
 def parkour_hurdle_terrain(terrain,
-                           platform_len=2.5,
+                           platform_len=4.0,
                            platform_height=0.,
                            num_stones=8,
                            stone_len=0.3,
