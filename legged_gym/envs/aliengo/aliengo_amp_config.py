@@ -31,7 +31,7 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/mocap_motions_aliengo_jumpL/*')
+MOTION_FILES = glob.glob('datasets/mocap_motions_aliengo_video_gen/*')
 
 
 class AliengoAMPCfg( LeggedRobotCfg ):
@@ -52,19 +52,19 @@ class AliengoAMPCfg( LeggedRobotCfg ):
         default_joint_angles = { # = target angles [rad] when action = 0.0
             'FL_hip_joint': -0.0,   # [rad]
             'FL_thigh_joint': 0.8,     # [rad]
-            'FL_calf_joint': -1.5,   # [rad]
+            'FL_calf_joint': -1.7,   # [rad]
 
             'FR_hip_joint': 0.0,  # [rad]
             'FR_thigh_joint': 0.8,     # [rad]
-            'FR_calf_joint': -1.5,  # [rad]
+            'FR_calf_joint': -1.7,  # [rad]
 
             'RL_hip_joint': -0.0,   # [rad]
             'RL_thigh_joint': 1.0,   # [rad]
-            'RL_calf_joint': -1.5,    # [rad]
+            'RL_calf_joint': -1.7,    # [rad]
 
             'RR_hip_joint': 0.0,   # [rad]
             'RR_thigh_joint': 1.0,   # [rad]
-            'RR_calf_joint': -1.5,    # [rad]
+            'RR_calf_joint': -1.7,    # [rad]
         }
 
     class control( LeggedRobotCfg.control ):
@@ -80,7 +80,7 @@ class AliengoAMPCfg( LeggedRobotCfg ):
         actuator_net_file = "{LEGGED_GYM_ROOT_DIR}/resources/actuator_nets/unitree_aliengo_2rd_f100_it4000_ly2_mlp_dec27_dec28.pt"
 
     class terrain( LeggedRobotCfg.terrain ):
-        mesh_type = 'trimesh'
+        mesh_type = 'plane'
         measure_heights = False
 
     class asset( LeggedRobotCfg.asset ):

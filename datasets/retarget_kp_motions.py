@@ -21,8 +21,8 @@ from datasets.retarget_utils import *
 # from datasets import retarget_config_go1 as config    # (pace & trot) or canter
 # from datasets import retarget_config_go1_jump as config # jump
 # from datasets import retarget_config_aliengo as config # (pace & trot & canter) Aliengo
-from datasets import retarget_config_aliengo_jump as config # jump Aliengo
-
+# from datasets import retarget_config_aliengo_jump as config # jump Aliengo
+from datasets import retarget_config_aliengo_video as config
 
 POS_SIZE = 3
 ROT_SIZE = 4
@@ -316,6 +316,13 @@ def load_ref_data(JOINT_POS_FILENAME, FRAME_START, FRAME_END):
   start_frame = 0 if (FRAME_START is None) else FRAME_START
   end_frame = joint_pos_data.shape[0] if (FRAME_END is None) else FRAME_END
   joint_pos_data = joint_pos_data[start_frame:end_frame]
+
+  reverse_x = True
+  if reverse_x:
+      print("joint_pos_data.shape", joint_pos_data.shape)  # 222,81
+      for i in range(joint_pos_data.shape[1] // 3):
+          joint_pos_data[:, i * 3 + 2] = -1 * joint_pos_data[:, i * 3 + 2]
+          joint_pos_data[:, i * 3 + 2] += 1.0
 
   return joint_pos_data
 
