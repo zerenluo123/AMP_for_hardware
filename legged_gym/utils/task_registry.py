@@ -152,8 +152,12 @@ class TaskRegistry():
             save_item_config = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', name.rstrip('_amp'), name + '_config.py')
             copyfile(save_item_config, log_dir + '/amp_config.py')
 
-            save_item_env = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', 'base', 'legged_robot.py')
-            copyfile(save_item_env, log_dir + '/legged_robot.py')
+            save_item_base_env = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', 'base', 'legged_robot.py')
+            copyfile(save_item_base_env, log_dir + '/legged_robot.py')
+
+            save_item_specific_env = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', name.rstrip('_amp'), name + '.py')
+            copyfile(save_item_specific_env, log_dir + '/' + name + '.py')
+
 
         # print(train_cfg.runner_class_name)
         runner_class = eval(train_cfg.runner_class_name)
