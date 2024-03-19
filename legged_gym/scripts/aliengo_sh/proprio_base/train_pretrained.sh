@@ -14,6 +14,6 @@ echo extra "${EXTRA_ARGS}"
 CUDA_VISIBLE_DEVICES=${GPUS} \
 python legged_gym/scripts/train.py --task=aliengo_amp --headless --seed=${SEED} \
 --output_name="${CACHE}" \
---checkpoint_model="${PRETRAIN}"/model_16400.pt \
+--checkpoint_model="${PRETRAIN}"/model_22000.pt \
 --runner_class_name=ProprioBaseAMPOnPolicyRunner \
 ${EXTRA_ARGS}

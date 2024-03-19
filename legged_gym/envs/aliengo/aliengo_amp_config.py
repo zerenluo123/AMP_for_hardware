@@ -31,7 +31,7 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/mocap_motions_aliengo_video_gen/*')
+MOTION_FILES = glob.glob('datasets/mocap_motions_aliengo_video_gen_x0.4/*')
 
 
 class AliengoAMPCfg( LeggedRobotCfg ):
@@ -69,7 +69,7 @@ class AliengoAMPCfg( LeggedRobotCfg ):
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
-        control_type = 'P'
+        control_type = 'actuator_net'
         stiffness = {'joint': 40.}  # [N*m/rad]
         damping = {'joint': 1.2}     # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
@@ -146,7 +146,7 @@ class AliengoAMPCfg( LeggedRobotCfg ):
             stand_still = 0.0
             dof_pos_limits = 0.0
 
-            feet_jump_high = 2.4 * 1. / (.005 * 6)
+            # feet_jump_high = 2.4 * 1. / (.005 * 6)
 
 
     class commands:
@@ -156,7 +156,7 @@ class AliengoAMPCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [-1.0, 2.4] # min max [m/s]
+            lin_vel_x = [-1.0, 2.0] # min max [m/s]
             lin_vel_y = [-0.3, 0.3]   # min max [m/s]
             ang_vel_yaw = [-1.57, 1.57]    # min max [rad/s]
             heading = [-3.14, 3.14]
@@ -183,7 +183,7 @@ class AliengoAMPCfgPPO( LeggedRobotCfgPPO ):
 
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'aliengo_amp_example'
+        experiment_name = 'aliengo_amp_video'
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
         max_iterations = 25000 # number of policy updates

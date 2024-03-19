@@ -10,10 +10,10 @@ VISUALIZE_RETARGETING = True
 URDF_FILENAME = "{LEGGED_GYM_ROOT_DIR}/resources/robots/aliengo_description/urdf/aliengo_re.urdf".format(
     LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
 # generate mocap data name
-OUTPUT_DIR = "{LEGGED_GYM_ROOT_DIR}/datasets/mocap_motions_aliengo_video_gen".format(
+OUTPUT_DIR = "{LEGGED_GYM_ROOT_DIR}/datasets/mocap_motions_aliengo_video_gen_x0.4".format(
     LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
 
-REF_POS_SCALE = 0.88  #10----1   18-5 -----0.8
+REF_POS_SCALE = 0.94  #10----1   18-5 -----0.8
 INIT_POS = np.array([0, 0, 0.32])
 INIT_ROT = np.array([0, 0, 0, 1.0])
 
@@ -28,10 +28,10 @@ SIM_ROOT_OFFSET = np.array([0, 0, -0.04])
 #]
 #         10        #
 SIM_TOE_OFFSET_LOCAL = [
-    np.array([0, 0.09, 0.0]),
+    np.array([0, 0.11, 0.0]), # FR
     np.array([0, -0.10, 0.0]),
-    np.array([0, 0.03, 0.0]),
-    np.array([0, -0.03, 0.0])
+    np.array([0, 0.06, 0.0]),
+    np.array([0, 0.05, 0.0])
 ]
 # #        18-5         #
 # SIM_TOE_OFFSET_LOCAL = [
@@ -59,9 +59,8 @@ MOCAP_MOTIONS = [
     # Output motion name, input file, frame start, frame end, motion weight.
 
    [
-        "video0",
-        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv.txt".format(
-            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 0, 150, 1
+        "video00",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv_x0.4.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 20, 300, 1
     ],
-
 ]
