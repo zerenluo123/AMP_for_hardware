@@ -63,4 +63,19 @@ MOCAP_MOTIONS = [
         "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv_x0.4.txt".format(
             LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 20, 300, 1
     ],
+    [
+        "video00",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv_x0.4.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 20, 300, 1
+    ],
+    [
+        "video00",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv_x0.4.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 20, 300, 1
+    ],
+    [
+        "video00",
+        "{LEGGED_GYM_ROOT_DIR}/datasets/keypoint_datasets/video/video10runandjump_changethin_from_csv_x0.4.txt".format(
+            LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR), 20, 300, 1
+    ],
 ]
