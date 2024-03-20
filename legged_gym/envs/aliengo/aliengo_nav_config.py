@@ -32,17 +32,23 @@ import glob
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
 
-class AliengoAMPCfg( LeggedRobotCfg ):
+class AliengoNavCfg( LeggedRobotCfg ):
 
     class env( LeggedRobotCfg.env ):
         num_envs = 5480
         include_history_steps = 4  # Number of steps of history to include.
-        num_observations = 45
+        num_observations = 45           # Number for navigation policy's observation
         num_privileged_obs = 48
+        num_locomotion_observations = 45 # Number of locomotion policy's observation
         reference_state_initialization = True
         reference_state_initialization_prob = 0.85
         ee_names = ["FL_foot", "FR_foot", "RL_foot", "RR_foot"]
         get_commands_from_joystick = False
+
+        # ! load pre-trained locomotion policy
+        locomotion_policy_experiment_name = None
+        locomotion_policy_load_run = None
+        locomotion_policy_checkpoint = None
 
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.42] # x,y,z [m]
@@ -149,31 +155,25 @@ class AliengoAMPCfg( LeggedRobotCfg ):
         enable_foot_contact = False
         enable_foot_height = False
 
-class AliengoAMPCfgPPO( LeggedRobotCfgPPO ):
-    runner_class_name = 'ProprioBaseAMPOnPolicyRunner'
+class AliengoNavCfgPPO( LeggedRobotCfgPPO ):
+    runner_class_name = 'ProprioBaseNavOnPolicyRunner'
 
     class policy( LeggedRobotCfgPPO.policy ):
         class hist_encoder:
-            include_history_steps = AliengoAMPCfg.env.include_history_steps
+            include_history_steps = AliengoNavCfg.env.include_history_steps
             priv_mlp_units = [258, 128, 3]
 
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
-        amp_replay_buffer_size = 1000000
         num_learning_epochs = 5
         num_mini_batches = 4
 
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
         experiment_name = 'aliengo_amp_example'
-        algorithm_class_name = 'AMPPPO'
+        algorithm_class_name = 'PPO'
         policy_class_name = 'ActorCritic'
         max_iterations = 25000 # number of policy updates
-
-        amp_reward_coef = 2.0
-        amp_num_preload_transitions = 2000000
-        amp_task_reward_lerp = 0.2
-        amp_discr_hidden_dims = [1024, 512]
 
         min_normalized_std = [0.01, 0.01, 0.01] * 4
 

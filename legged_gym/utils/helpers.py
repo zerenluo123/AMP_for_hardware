@@ -130,6 +130,13 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
         # num envs
         if args.num_envs is not None:
             env_cfg.env.num_envs = args.num_envs
+        if args.locomotion_policy_experiment_name is not None:
+            env_cfg.env.locomotion_policy_experiment_name = args.locomotion_policy_experiment_name
+        if args.locomotion_policy_load_run is not None:
+            env_cfg.env.locomotion_policy_load_run = args.locomotion_policy_load_run
+        if args.locomotion_policy_checkpoint is not None:
+            env_cfg.env.locomotion_policy_checkpoint = args.locomotion_policy_checkpoint
+
     if cfg_train is not None:
         if args.seed is not None:
             cfg_train.seed = args.seed
@@ -185,6 +192,14 @@ def get_args():
 
         # ! selection of the algorithm
         {"name": "--runner_class_name", "type": str, "default": "debug", "help": "which algorithm / runner you select"},
+
+        # ! for navigation -- load the locomotion policy
+        {"name": "--locomotion_policy_experiment_name", "type": str, "default": "debug",
+         "help": "locomotion training experiment name"},
+        {"name": "--locomotion_policy_load_run", "type": str, "default": "debug",
+         "help": "locomotion training load run"},
+        {"name": "--locomotion_policy_checkpoint", "type": str, "default": "debug",
+         "help": "locomotion training checkpoint"},
 
     ]
     # parse arguments
