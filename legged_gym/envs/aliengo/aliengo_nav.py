@@ -52,12 +52,41 @@ class AliengoNav(LeggedRobot):
         self._reset_dofs(env_ids)
         self._reset_root_states(env_ids)
 
+    def _get_nav_noise_scale_vec(self, cfg):
+        """ Sets a vector used to scale the noise added to the observations.
+            [NOTE]: Must be adapted when changing the observations structure
+
+        Args:
+            cfg (Dict): Environment config file
+
+        Returns:
+            [torch.Tensor]: Vector of scales used to multiply a uniform distribution in [-1, 1]
+        """
+        noise_vec = torch.zeros_like(self.privileged_obs_buf[0])
+        self.add_noise = self.cfg.noise.add_noise
+        noise_scales = self.cfg.noise.noise_scales
+        noise_level = self.cfg.noise.noise_level
+        noise_vec[:3] = noise_scales.lin_vel * noise_level * self.obs_scales.lin_vel
+        noise_vec[3:6] = noise_scales.ang_vel * noise_level * self.obs_scales.ang_vel
+        noise_vec[6:9] = noise_scales.gravity * noise_level
+        noise_vec[9:12] = 0. # commands
+        noise_vec[12:24] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
+        noise_vec[24:36] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
+        noise_vec[36:48] = 0. # previous actions
+        if self.cfg.terrain.measure_heights:
+            noise_vec[48:235] = noise_scales.height_measurements* noise_level * self.obs_scales.height_measurements
+        return noise_vec
+
     def _init_buffers(self):
         super()._init_buffers()
 
         # ! for locomotion policy
         self.locomotion_actions = torch.zeros(self.num_envs, 12, dtype=torch.float, device=self.device, requires_grad=False)
-        self.locomotion_commands = self.commands = torch.zeros(self.num_envs, 3, dtype=torch.float, device=self.device, requires_grad=False) # x vel, y vel, yaw vel
+        self.locomotion_commands = torch.zeros(self.num_envs, 3, dtype=torch.float, device=self.device, requires_grad=False) # x vel, y vel, yaw vel
+
+        # ! for navigation observation's noise
+        self.nav_noise_scale_vec = self._get_nav_noise_scale_vec(self.cfg)
+
 
     def step(self, actions):
         """ Apply actions, simulate, call self.post_physics_step()
@@ -65,6 +94,7 @@ class AliengoNav(LeggedRobot):
         Args:
             actions (torch.Tensor): velocity command. Tensor of shape (num_envs, num_actions_per_env)
         """
+        # ! action now is the 2-dimensional high-level command -- vx, yaw
         clip_actions = self.cfg.normalization.clip_actions
         self.actions = torch.clip(actions, -clip_actions, clip_actions).to(self.device)
 
@@ -83,12 +113,10 @@ class AliengoNav(LeggedRobot):
         # step physics and render each frame
         self.render()
         for _ in range(self.cfg.control.decimation):
-            # TODO: the action now is the 3-dim vx, vy, yaw
-            # TODO: calculate / concatenate the locomotion observation with action
-            # TODO: feed the locomotion observation into the locomotion policy, output the action of locomotion policy
-            # TODO: still get troque via locomotion actions, still set dof actuation force tensor
+            # ! feed the locomotion observation into the locomotion policy, output the action of locomotion policy
             self.locomotion_actions = self.locomotion_policy(self.locomotion_obs_buf)
 
+            # ! still get torque via locomotion actions, still set dof actuation force tensor
             self.torques = self._compute_torques(self.locomotion_actions).view(self.torques.shape)
             self.gym.set_dof_actuation_force_tensor(self.sim, gymtorch.unwrap_tensor(self.torques))
             self.gym.simulate(self.sim)
