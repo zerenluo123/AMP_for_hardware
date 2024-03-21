@@ -41,14 +41,23 @@ class AliengoNav(LeggedRobot):
         self.locomotion_policy = torch.jit.load(locomotion_policy_path).to(self.device)
         cprint(f'Loaded locomotion policy \n {self.locomotion_policy}', 'cyan', attrs=['bold'])
 
+    def reset(self):
+        """ Reset all robots"""
+        self.reset_idx(torch.arange(self.num_envs, device=self.device))
+        self.obs_dict, _, _, _, _ = self.step(torch.zeros(self.num_envs, self.num_actions, device=self.device, requires_grad=False))
+        return self.obs_dict
+
     def reset_idx(self, env_ids):
         super().reset_idx(env_ids)
+        self._reset_dofs(env_ids)
+        self._reset_root_states(env_ids)
 
     def _init_buffers(self):
         super()._init_buffers()
 
         # ! for locomotion policy
         self.locomotion_actions = torch.zeros(self.num_envs, 12, dtype=torch.float, device=self.device, requires_grad=False)
+        self.locomotion_commands = self.commands = torch.zeros(self.num_envs, 3, dtype=torch.float, device=self.device, requires_grad=False) # x vel, y vel, yaw vel
 
     def step(self, actions):
         """ Apply actions, simulate, call self.post_physics_step()
@@ -60,9 +69,12 @@ class AliengoNav(LeggedRobot):
         self.actions = torch.clip(actions, -clip_actions, clip_actions).to(self.device)
 
         # ! calculate / concatenate the locomotion observation
+        self.locomotion_commands[:, 0] = self.actions[:, 0] # vx
+        self.locomotion_commands[:, 1] = 0                  # vy
+        self.locomotion_commands[:, 2] = self.actions[:, 1] # yaw vel
         self.locomotion_obs_buf = torch.cat(( self.base_ang_vel  * self.obs_scales.ang_vel,
                                             self.projected_gravity,
-                                            self.commands[:, :3] * self.commands_scale,
+                                            self.locomotion_commands * self.commands_scale,
                                             (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
                                             self.dof_vel * self.obs_scales.dof_vel,
                                             self.locomotion_actions
@@ -75,9 +87,9 @@ class AliengoNav(LeggedRobot):
             # TODO: calculate / concatenate the locomotion observation with action
             # TODO: feed the locomotion observation into the locomotion policy, output the action of locomotion policy
             # TODO: still get troque via locomotion actions, still set dof actuation force tensor
+            self.locomotion_actions = self.locomotion_policy(self.locomotion_obs_buf)
 
-
-            self.torques = self._compute_torques(self.actions).view(self.torques.shape)
+            self.torques = self._compute_torques(self.locomotion_actions).view(self.torques.shape)
             self.gym.set_dof_actuation_force_tensor(self.sim, gymtorch.unwrap_tensor(self.torques))
             self.gym.simulate(self.sim)
             if self.device == 'cpu':
@@ -145,8 +157,65 @@ class AliengoNav(LeggedRobot):
         return env_ids
 
     def compute_observations(self):
-        super().compute_observations()
+        """
+            Computes observations
+        """
+        # body orientation
+        self.delta_yaw = self.target_yaw - self.yaw
+        self.delta_next_yaw = self.next_target_yaw - self.yaw
         # TODO: navigation observation; yaw angle
+
+        self.commands[:, 0] = 0
+        self.commands[:, 1] = 0
+        self.commands[:, 2] = 0
+
+        self.privileged_obs_buf = torch.cat((  self.base_lin_vel * self.obs_scales.lin_vel,
+                                    self.base_ang_vel  * self.obs_scales.ang_vel,
+                                    self.projected_gravity,
+                                    self.commands[:, :3] * self.commands_scale,
+                                    (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
+                                    self.dof_vel * self.obs_scales.dof_vel,
+                                    self.actions
+                                    ),dim=-1)
+        # add perceptive inputs if not blind
+        if self.cfg.terrain.measure_heights:
+            heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights, -1, 1.) * self.obs_scales.height_measurements
+            self.privileged_obs_buf = torch.cat((self.privileged_obs_buf, heights), dim=-1)
+
+        # add other privileged information
+        if self.cfg.privileged_info.enable_foot_contact:
+            contact = self.contact_forces[:, self.feet_indices, 2] > 1.
+            self.privileged_obs_buf = torch.cat((self.privileged_obs_buf, contact), dim=-1)
+
+        # add noise if needed
+        if self.add_noise:
+            self.privileged_obs_buf += (2 * torch.rand_like(self.privileged_obs_buf) - 1) * self.noise_scale_vec
+
+        # Remove velocity observations from policy observation.
+        # if self.num_obs == self.num_privileged_obs - 6:
+        #     self.obs_buf = self.privileged_obs_buf[:, 6:]
+        # if self.num_obs == self.num_privileged_obs - 3:
+        #     self.obs_buf = self.privileged_obs_buf[:, 3:]
+        # else:
+        #     self.obs_buf = torch.clone(self.privileged_obs_buf)
+        self.obs_buf = self.privileged_obs_buf[:, 3:3+35]
+
+        # ! add proprioceptive observation history
+        # get previous step's obs
+        prev_obs_buf = self.obs_buf_lag_history[:, 1:].clone()
+
+        # get current step's obs
+        cur_obs_buf = self.obs_buf.clone().unsqueeze(1)
+
+        # concatenate to get full history
+        self.obs_buf_lag_history[:] = torch.cat([prev_obs_buf, cur_obs_buf], dim=1)
+
+        # refill the initialized buffers
+        # Note: if reset, then the history buffer are all filled with the current observation
+        at_reset_env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
+        self.obs_buf_lag_history[at_reset_env_ids, :, :] = self.obs_buf[at_reset_env_ids].unsqueeze(1)
+
+        self.proprio_hist_buf = self.obs_buf_lag_history[:, -self.include_history_steps:].clone()
 
 
 

@@ -37,9 +37,12 @@ class AliengoNavCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env ):
         num_envs = 5480
         include_history_steps = 4  # Number of steps of history to include.
-        num_observations = 45           # Number for navigation policy's observation
-        num_privileged_obs = 48
+        num_observations = 35           # Number for navigation policy's observation
+        num_privileged_obs = 38
+
+        num_actions = 2
         num_locomotion_observations = 45 # Number of locomotion policy's observation
+
         reference_state_initialization = True
         reference_state_initialization_prob = 0.85
         ee_names = ["FL_foot", "FR_foot", "RL_foot", "RR_foot"]

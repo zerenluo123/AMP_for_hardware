@@ -17,12 +17,16 @@ from legged_gym.envs import LeggedRobot
 from legged_gym import LEGGED_GYM_ROOT_DIR
 from .aliengo_amp_config import AliengoAMPCfg
 
+from rl.datasets.motion_loader import AMPLoader
 
 class AliengoAMP(LeggedRobot):
     cfg: AliengoAMPCfg
 
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
         super().__init__(cfg, sim_params, physics_engine, sim_device, headless)
+        if self.cfg.env.reference_state_initialization:
+            self.amp_loader = AMPLoader(motion_files=self.cfg.env.amp_motion_files, device=self.device, time_between_frames=self.dt)
+
         self._get_commands_from_joystick = self.cfg.env.get_commands_from_joystick
         if self._get_commands_from_joystick:
             pygame.init()
@@ -30,9 +34,137 @@ class AliengoAMP(LeggedRobot):
             self._p1.init()
             print(f"Loaded joystick with {self._p1.get_numaxes()} axes.")
 
+    def reset(self):
+        """ Reset all robots"""
+        self.reset_idx(torch.arange(self.num_envs, device=self.device))
+        self.obs_dict, _, _, _, _, _ = self.step(torch.zeros(self.num_envs, self.num_actions, device=self.device, requires_grad=False))
+        return self.obs_dict
+
+    def step(self, actions):
+        """ Apply actions, simulate, call self.post_physics_step()
+
+        Args:
+            actions (torch.Tensor): Tensor of shape (num_envs, num_actions_per_env)
+        """
+        clip_actions = self.cfg.normalization.clip_actions
+        self.actions = torch.clip(actions, -clip_actions, clip_actions).to(self.device)
+        # step physics and render each frame
+        self.render()
+        for _ in range(self.cfg.control.decimation):
+            self.torques = self._compute_torques(self.actions).view(self.torques.shape)
+            self.gym.set_dof_actuation_force_tensor(self.sim, gymtorch.unwrap_tensor(self.torques))
+            self.gym.simulate(self.sim)
+            if self.device == 'cpu':
+                self.gym.fetch_results(self.sim, True)
+            self.gym.refresh_dof_state_tensor(self.sim)
+        reset_env_ids, terminal_amp_states = self.post_physics_step()
+
+        # return clipped obs, clipped states (None), rewards, dones and infos
+        clip_obs = self.cfg.normalization.clip_observations
+        self.obs_buf = torch.clip(self.obs_buf, -clip_obs, clip_obs)
+
+        if self.privileged_obs_buf is not None:
+            self.privileged_obs_buf = torch.clip(self.privileged_obs_buf, -clip_obs, clip_obs)
+
+        # assign to obs struct
+        self.obs_dict['obs'] = self.obs_buf
+        self.obs_dict['privileged_obs'] = self.privileged_obs_buf.to(self.device)
+        self.obs_dict['proprio_hist'] = self.proprio_hist_buf.to(self.device).flatten(1)
+
+        return self.obs_dict, self.rew_buf, self.reset_buf, self.extras, reset_env_ids, terminal_amp_states
+
+
+    def post_physics_step(self):
+        """ check terminations, compute observations and rewards
+            calls self._post_physics_step_callback() for common computations
+            calls self._draw_debug_vis() if needed
+        """
+        self.gym.refresh_actor_root_state_tensor(self.sim)
+        self.gym.refresh_net_contact_force_tensor(self.sim)
+        self.gym.refresh_rigid_body_state_tensor(self.sim)
+
+        self.episode_length_buf += 1
+        self.common_step_counter += 1
+
+        # prepare quantities
+        self.base_quat[:] = self.root_states[:, 3:7]
+        self.base_lin_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 7:10])
+        self.base_ang_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
+        self.projected_gravity[:] = quat_rotate_inverse(self.base_quat, self.gravity_vec)
+
+        self._update_goals()
+        self._post_physics_step_callback()
+
+        # compute observations, rewards, resets, ...
+        self.check_termination()
+        self.compute_reward()
+        env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
+        terminal_amp_states = self.get_amp_observations()[env_ids]
+        self.reset_idx(env_ids)
+
+        self.cur_goals = self._gather_cur_goals()
+        self.next_goals = self._gather_cur_goals(future=1)
+
+        self.compute_observations() # in some cases a simulation step might be required to refresh some obs (for example body positions)
+
+        self.last_actions[:] = self.actions[:]
+        self.last_dof_vel[:] = self.dof_vel[:]
+        self.last_root_vel[:] = self.root_states[:, 7:13]
+
+        if self.viewer and self.enable_viewer_sync and self.debug_viz:
+            self.gym.clear_lines(self.viewer)
+            self._draw_goals()
+
+        return env_ids, terminal_amp_states
 
     def reset_idx(self, env_ids):
         super().reset_idx(env_ids)
+        # reset robot states
+        if self.cfg.env.reference_state_initialization:
+            frames = self.amp_loader.get_full_frame_batch(len(env_ids))
+            self._reset_dofs_amp(env_ids, frames)
+            self._reset_root_states_amp(env_ids, frames)
+        else:
+            self._reset_dofs(env_ids)
+            self._reset_root_states(env_ids)
+
+    def _reset_dofs_amp(self, env_ids, frames):
+        """ Resets DOF position and velocities of selected environmments
+        Positions are randomly selected within 0.5:1.5 x default positions.
+        Velocities are set to zero.
+
+        Args:
+            env_ids (List[int]): Environemnt ids
+            frames: AMP frames to initialize motion with
+        """
+        self.dof_pos[env_ids] = AMPLoader.get_joint_pose_batch(frames)
+        self.dof_vel[env_ids] = AMPLoader.get_joint_vel_batch(frames)
+        env_ids_int32 = env_ids.to(dtype=torch.int32)
+        self.gym.set_dof_state_tensor_indexed(self.sim,
+                                              gymtorch.unwrap_tensor(self.dof_state),
+                                              gymtorch.unwrap_tensor(env_ids_int32), len(env_ids_int32))
+
+    def _reset_root_states_amp(self, env_ids, frames):
+        """ Resets ROOT states position and velocities of selected environmments
+            Sets base position based on the curriculum
+            Selects randomized base velocities within -0.5:0.5 [m/s, rad/s]
+        Args:
+            env_ids (List[int]): Environemnt ids
+        """
+        # base position
+        root_pos = AMPLoader.get_root_pos_batch(frames)
+        root_pos[:, :2] = root_pos[:, :2] + self.env_origins[env_ids, :2]
+        # root_pos[:, :2] = self.env_origins[env_ids, :2]
+        self.root_states[env_ids, :3] = root_pos
+        root_orn = AMPLoader.get_root_rot_batch(frames)
+        self.root_states[env_ids, 3:7] = root_orn
+        self.root_states[env_ids, 7:10] = quat_rotate(root_orn, AMPLoader.get_linear_vel_batch(frames))
+        self.root_states[env_ids, 10:13] = quat_rotate(root_orn, AMPLoader.get_angular_vel_batch(frames))
+
+        env_ids_int32 = env_ids.to(dtype=torch.int32)
+        self.gym.set_actor_root_state_tensor_indexed(self.sim,
+                                                     gymtorch.unwrap_tensor(self.root_states),
+                                                     gymtorch.unwrap_tensor(env_ids_int32), len(env_ids_int32))
 
     def _init_buffers(self):
         super()._init_buffers()
@@ -41,7 +173,9 @@ class AliengoAMP(LeggedRobot):
         return super()._compute_torques(actions)
 
     def compute_observations(self):
-        super().compute_observations()
+        """
+            Computes observations
+        """
         if self._get_commands_from_joystick:
           for event in pygame.event.get():
             lin_vel_x = -1 * self._p1.get_axis(1)
@@ -113,6 +247,21 @@ class AliengoAMP(LeggedRobot):
         self.obs_buf_lag_history[at_reset_env_ids, :, :] = self.obs_buf[at_reset_env_ids].unsqueeze(1)
 
         self.proprio_hist_buf = self.obs_buf_lag_history[:, -self.include_history_steps:].clone()
+
+    def get_amp_observations(self):
+        joint_pos = self.dof_pos
+        foot_pos = []
+        with torch.no_grad():
+            for i, chain_ee in enumerate(self.chain_ee):
+                foot_pos.append(
+                    chain_ee.forward_kinematics(joint_pos[:, i * 3:i * 3 +
+                                                3]).get_matrix()[:, :3, 3])
+        foot_pos = torch.cat(foot_pos, dim=-1)
+        base_lin_vel = self.base_lin_vel
+        base_ang_vel = self.base_ang_vel
+        joint_vel = self.dof_vel
+        z_pos = self.root_states[:, 2:3]
+        return torch.cat((joint_pos, foot_pos, base_lin_vel, base_ang_vel, joint_vel, z_pos), dim=-1)
 
 
 
