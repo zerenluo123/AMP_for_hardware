@@ -142,7 +142,7 @@ class TaskRegistry():
         if log_root=="default":
             log_root = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name)
             if args.locomotion_policy_experiment_name is not None:
-                log_dir = os.path.join(log_root, args.output_name, 'nav')
+                log_dir = os.path.join(log_root, args.locomotion_policy_load_run, args.output_name)
             else:
                 log_dir = os.path.join(log_root, args.output_name)
         elif log_root is None:
