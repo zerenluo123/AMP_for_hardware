@@ -124,6 +124,22 @@ def get_load_path(root, load_run=-1, checkpoint=-1):
     load_path = os.path.join(load_run, model)
     return load_path
 
+def get_load_path_nav(root, loco_load_run, nav_load_run, checkpoint=-1):
+    loco_root = os.path.join(root, loco_load_run)
+    nav_load_run = os.path.join(loco_root, nav_load_run)
+
+    if checkpoint==-1:
+        models = [file for file in os.listdir(nav_load_run) if 'model' in file]
+        models.sort(key=lambda m: '{0:0>15}'.format(m))
+        model = models[-1]
+    else:
+        model = "model_{}.pt".format(checkpoint)
+
+    load_path = os.path.join(nav_load_run, model)
+    return load_path
+
+
+
 def update_cfg_from_args(env_cfg, cfg_train, args):
     # seed
     if env_cfg is not None:

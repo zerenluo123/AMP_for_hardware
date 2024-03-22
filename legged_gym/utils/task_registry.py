@@ -40,7 +40,7 @@ from rl.rl_algorithms.encode_vel.runners import OnPolicyRunner, EncodeVelAMPOnPo
 from rl.rl_algorithms.proprio_base.runners import OnPolicyRunner, ProprioBaseAMPOnPolicyRunner, ProprioBaseNavOnPolicyRunner
 
 from legged_gym import LEGGED_GYM_ROOT_DIR, LEGGED_GYM_ENVS_DIR
-from .helpers import get_args, update_cfg_from_args, class_to_dict, get_load_path, set_seed, parse_sim_params
+from .helpers import get_args, update_cfg_from_args, class_to_dict, get_load_path, get_load_path_nav, set_seed, parse_sim_params
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
 from shutil import copyfile
@@ -176,7 +176,14 @@ class TaskRegistry():
         resume = train_cfg.runner.resume
         if resume:
             # load previously trained model
-            resume_path = get_load_path(log_root, load_run=train_cfg.runner.load_run, checkpoint=train_cfg.runner.checkpoint)
+            if args.locomotion_policy_experiment_name is not None:
+                resume_path = get_load_path_nav(log_root,
+                                                loco_load_run=args.locomotion_policy_load_run,
+                                                nav_load_run=train_cfg.runner.load_run, # args load run already change the cfg
+                                                checkpoint=train_cfg.runner.checkpoint
+                                                )
+            else:
+                resume_path = get_load_path(log_root, load_run=train_cfg.runner.load_run, checkpoint=train_cfg.runner.checkpoint)
             print(f"Loading model from: {resume_path}")
             runner.load(resume_path)
         return runner, train_cfg

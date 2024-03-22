@@ -52,7 +52,7 @@ class LeggedRobotCfg(BaseConfig):
     class terrain:
         mesh_type = 'trimesh' # "heightfield" # none, plane, heightfield or trimesh
 
-        y_range = [-0.4, 0.4]
+        y_range = [-1.3, 1.3]
 
         horizontal_scale = 0.05 # [m]
         vertical_scale = 0.005 # [m]

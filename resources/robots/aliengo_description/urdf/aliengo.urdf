@@ -474,36 +474,6 @@
       <inertia ixx="1.6854e-05" ixy="0.0" ixz="0.0" iyy="1.6854e-05" iyz="0.0" izz="1.6854e-05"/>
     </inertial>
   </link>
-  <transmission name="FR_hip_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FR_hip_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FR_hip_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="FR_thigh_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FR_thigh_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FR_thigh_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="FR_calf_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FR_calf_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FR_calf_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
   <joint name="FL_hip_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0.2399 0.051 0"/>
     <parent link="trunk"/>
@@ -626,36 +596,6 @@
       <inertia ixx="1.6854e-05" ixy="0.0" ixz="0.0" iyy="1.6854e-05" iyz="0.0" izz="1.6854e-05"/>
     </inertial>
   </link>
-  <transmission name="FL_hip_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FL_hip_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FL_hip_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="FL_thigh_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FL_thigh_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FL_thigh_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="FL_calf_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="FL_calf_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="FL_calf_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
   <joint name="RR_hip_joint" type="revolute">
     <origin rpy="0 0 0" xyz="-0.2399 -0.051 0"/>
     <parent link="trunk"/>
@@ -778,36 +718,6 @@
       <inertia ixx="1.6854e-05" ixy="0.0" ixz="0.0" iyy="1.6854e-05" iyz="0.0" izz="1.6854e-05"/>
     </inertial>
   </link>
-  <transmission name="RR_hip_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="RR_hip_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="RR_hip_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="RR_thigh_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="RR_thigh_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="RR_thigh_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="RR_calf_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="RR_calf_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="RR_calf_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
   <joint name="RL_hip_joint" type="revolute">
     <origin rpy="0 0 0" xyz="-0.2399 0.051 0"/>
     <parent link="trunk"/>
@@ -930,36 +840,5 @@
       <inertia ixx="1.6854e-05" ixy="0.0" ixz="0.0" iyy="1.6854e-05" iyz="0.0" izz="1.6854e-05"/>
     </inertial>
   </link>
-  <transmission name="RL_hip_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="RL_hip_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="RL_hip_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="RL_thigh_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="RL_thigh_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="RL_thigh_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="RL_calf_tran">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="RL_calf_joint">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="RL_calf_motor">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <!-- <xacro:stairs stairs="15" xpos="0" ypos="2.0" zpos="0" /> -->
 </robot>
 
