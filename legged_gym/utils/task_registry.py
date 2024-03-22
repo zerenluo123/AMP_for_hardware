@@ -37,7 +37,7 @@ import numpy as np
 # ! different algorithms
 from rl.env import VecEnv
 from rl.rl_algorithms.encode_vel.runners import OnPolicyRunner, EncodeVelAMPOnPolicyRunner
-from rl.rl_algorithms.proprio_base.runners import OnPolicyRunner, ProprioBaseAMPOnPolicyRunner
+from rl.rl_algorithms.proprio_base.runners import OnPolicyRunner, ProprioBaseAMPOnPolicyRunner, ProprioBaseNavOnPolicyRunner
 
 from legged_gym import LEGGED_GYM_ROOT_DIR, LEGGED_GYM_ENVS_DIR
 from .helpers import get_args, update_cfg_from_args, class_to_dict, get_load_path, set_seed, parse_sim_params
@@ -141,7 +141,10 @@ class TaskRegistry():
 
         if log_root=="default":
             log_root = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name)
-            log_dir = os.path.join(log_root, args.output_name)
+            if args.locomotion_policy_experiment_name is not None:
+                log_dir = os.path.join(log_root, args.output_name, 'nav')
+            else:
+                log_dir = os.path.join(log_root, args.output_name)
         elif log_root is None:
             log_dir = None
         else:
@@ -149,15 +152,21 @@ class TaskRegistry():
 
         if not train_cfg.runner.resume:
             os.makedirs(log_dir, exist_ok=True)
-            save_item_config = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', name.rstrip('_amp'), name + '_config.py')
-            copyfile(save_item_config, log_dir + '/amp_config.py')
-
             save_item_base_env = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', 'base', 'legged_robot.py')
             copyfile(save_item_base_env, log_dir + '/legged_robot.py')
 
-            save_item_specific_env = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', name.rstrip('_amp'), name + '.py')
-            copyfile(save_item_specific_env, log_dir + '/' + name + '.py')
+            if args.locomotion_policy_experiment_name is not None:
+                save_item_config = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', name.rstrip('_nav'), name + '_config.py')
+                copyfile(save_item_config, log_dir + '/nav_config.py')
 
+                save_item_specific_env = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', name.rstrip('_nav'), name + '.py')
+                copyfile(save_item_specific_env, log_dir + '/' + name + '.py')
+            else:
+                save_item_config = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', name.rstrip('_amp'), name + '_config.py')
+                copyfile(save_item_config, log_dir + '/amp_config.py')
+
+                save_item_specific_env = os.path.join(LEGGED_GYM_ROOT_DIR, 'legged_gym', 'envs', name.rstrip('_amp'), name + '.py')
+                copyfile(save_item_specific_env, log_dir + '/' + name + '.py')
 
         # print(train_cfg.runner_class_name)
         runner_class = eval(train_cfg.runner_class_name)

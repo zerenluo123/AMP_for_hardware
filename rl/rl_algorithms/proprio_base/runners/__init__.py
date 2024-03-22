@@ -30,3 +30,4 @@
 
 from .on_policy_runner import OnPolicyRunner
 from .amp_on_policy_runner import ProprioBaseAMPOnPolicyRunner
+from .nav_on_policy_runner import ProprioBaseNavOnPolicyRunner

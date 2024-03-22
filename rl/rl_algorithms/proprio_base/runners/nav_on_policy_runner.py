@@ -58,7 +58,7 @@ class ProprioBaseNavOnPolicyRunner:
         self.tot_time = 0
         self.current_learning_iteration = 0
 
-        _, _ = self.env.reset()
+        _ = self.env.reset()
 
     def learn(self, num_learning_iterations, init_at_random_ep_len=False):
         # restore the training
@@ -71,7 +71,6 @@ class ProprioBaseNavOnPolicyRunner:
             self.env.episode_length_buf = torch.randint_like(self.env.episode_length_buf,
                                                              high=int(self.env.max_episode_length))
         obs_dict = self.env.get_observations()
-        privileged_obs = self.env.get_privileged_observations()
         obs, critic_obs = obs_dict['obs'].to(self.device), \
                           obs_dict['privileged_obs'].to(self.device)
         self.alg.actor_critic.train()  # switch to train mode (for dropout for example)
@@ -115,7 +114,7 @@ class ProprioBaseNavOnPolicyRunner:
 
                 # Learning step
                 start = stop
-                self.alg.compute_returns(critic_obs)
+                self.alg.compute_returns(obs_dict)
 
             mean_value_loss, mean_surrogate_loss = self.alg.update()
             stop = time.time()

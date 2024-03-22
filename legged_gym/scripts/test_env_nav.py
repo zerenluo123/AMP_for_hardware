@@ -37,7 +37,7 @@ def play(args):
     stop_rew_log = env.max_episode_length + 1 # number of steps before print average episode rewards
 
     for i in range(10*int(env.max_episode_length)):
-        actions = torch.tensor([0.0, 1.0], dtype=torch.float) # vx, yaw vel
+        actions = torch.tensor([0.9, 0.05], dtype=torch.float) # vx, yaw vel
         actions = actions.repeat(env_cfg.env.num_envs, 1)
         obs_dict, rews, dones, infos, _ = env.step(actions.detach())
 

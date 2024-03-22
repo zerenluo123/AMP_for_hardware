@@ -47,6 +47,21 @@ class AliengoNav(LeggedRobot):
         self.obs_dict, _, _, _, _ = self.step(torch.zeros(self.num_envs, self.num_actions, device=self.device, requires_grad=False))
         return self.obs_dict
 
+    def check_termination(self):
+        """ Check if environments need to be reset
+        """
+        self.reset_buf = torch.any(torch.norm(self.contact_forces[:, self.termination_contact_indices, :], dim=-1) > 1., dim=1)
+        roll_cutoff = torch.abs(self.roll) > 1.5
+        reach_goal_cutoff = self.cur_goal_idx >= self.cfg.terrain.num_goals # already reach the last goal, that start the goal over again
+        height_cutoff = self.root_states[:, 2] < -0.25
+
+        self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
+        self.time_out_buf |= reach_goal_cutoff
+
+        self.reset_buf |= self.time_out_buf
+        self.reset_buf |= roll_cutoff
+        self.reset_buf |= height_cutoff
+
     def reset_idx(self, env_ids):
         super().reset_idx(env_ids)
         self._reset_dofs(env_ids)
@@ -69,12 +84,12 @@ class AliengoNav(LeggedRobot):
         noise_vec[:3] = noise_scales.lin_vel * noise_level * self.obs_scales.lin_vel
         noise_vec[3:6] = noise_scales.ang_vel * noise_level * self.obs_scales.ang_vel
         noise_vec[6:9] = noise_scales.gravity * noise_level
-        noise_vec[9:12] = 0. # commands
-        noise_vec[12:24] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
-        noise_vec[24:36] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
-        noise_vec[36:48] = 0. # previous actions
-        if self.cfg.terrain.measure_heights:
-            noise_vec[48:235] = noise_scales.height_measurements* noise_level * self.obs_scales.height_measurements
+        noise_vec[9:11] = 0. # deta yaw and next delta yaw
+        noise_vec[11:23] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
+        noise_vec[23:35] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
+        noise_vec[35:37] = 0. # previous actions
+        # if self.cfg.terrain.measure_heights:
+        #     noise_vec[48:235] = noise_scales.height_measurements* noise_level * self.obs_scales.height_measurements
         return noise_vec
 
     def _init_buffers(self):
@@ -191,16 +206,13 @@ class AliengoNav(LeggedRobot):
         # body orientation
         self.delta_yaw = self.target_yaw - self.yaw
         self.delta_next_yaw = self.next_target_yaw - self.yaw
-        # TODO: navigation observation; yaw angle
 
-        self.commands[:, 0] = 0
-        self.commands[:, 1] = 0
-        self.commands[:, 2] = 0
-
+        # navigation observation
         self.privileged_obs_buf = torch.cat((  self.base_lin_vel * self.obs_scales.lin_vel,
                                     self.base_ang_vel  * self.obs_scales.ang_vel,
                                     self.projected_gravity,
-                                    self.commands[:, :3] * self.commands_scale,
+                                    self.delta_yaw[:, None],
+                                    self.delta_next_yaw[:, None],
                                     (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
                                     self.dof_vel * self.obs_scales.dof_vel,
                                     self.actions
@@ -226,7 +238,7 @@ class AliengoNav(LeggedRobot):
         #     self.obs_buf = self.privileged_obs_buf[:, 3:]
         # else:
         #     self.obs_buf = torch.clone(self.privileged_obs_buf)
-        self.obs_buf = self.privileged_obs_buf[:, 3:3+35]
+        self.obs_buf = self.privileged_obs_buf[:, 3:3+34]
 
         # ! add proprioceptive observation history
         # get previous step's obs

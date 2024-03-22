@@ -124,8 +124,8 @@ class PPO:
         self.transition.clear()
         self.actor_critic.reset(dones)
     
-    def compute_returns(self, last_critic_obs):
-        last_values = self.actor_critic.evaluate(last_critic_obs).detach()
+    def compute_returns(self, obs_dict):
+        last_values = self.actor_critic.evaluate(obs_dict).detach()
         self.storage.compute_returns(last_values, self.gamma, self.lam)
 
     def update(self):
