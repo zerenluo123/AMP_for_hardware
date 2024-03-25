@@ -46,6 +46,8 @@ class AliengoNavCfg( LeggedRobotCfg ):
         ee_names = ["FL_foot", "FR_foot", "RL_foot", "RR_foot"]
         get_commands_from_joystick = False
 
+        episode_length_s = 30 # episode length in seconds
+
         # ! load pre-trained locomotion policy
         locomotion_policy_experiment_name = None
         locomotion_policy_load_run = None
@@ -137,6 +139,11 @@ class AliengoNavCfg( LeggedRobotCfg ):
             tracking_goal_vel = 1.5
             tracking_yaw = 0.5
 
+    class normalization( LeggedRobotCfg.normalization ):
+        clip_actions = 0.8
+        clip_action_lin_vel_x = 0.65
+        clip_action_ang_vel_yaw = 0.65
+
 
     class commands:
         curriculum = False
@@ -170,18 +177,18 @@ class AliengoNavCfgPPO( LeggedRobotCfgPPO ):
         num_mini_batches = 4
 
     class runner( LeggedRobotCfgPPO.runner ):
-        run_name = ''
-        experiment_name = 'aliengo_amp_example'
-        algorithm_class_name = 'PPO'
         policy_class_name = 'ActorCritic'
-        max_iterations = 25000 # number of policy updates
+        algorithm_class_name = 'PPO'
+        max_iterations = 10000 # number of policy updates
 
+        # logging
+        experiment_name = 'aliengo_amp_example'
+        run_name = ''
         min_normalized_std = [0.01, 0.01, 0.01] * 4
 
+        # load and resume
         load_run = -1
-
         checkpoint_model = None # load pre-trained model name
-
         export_policy = False
         export_onnx_policy = False
 

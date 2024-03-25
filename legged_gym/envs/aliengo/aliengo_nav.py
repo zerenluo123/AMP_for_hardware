@@ -113,6 +113,17 @@ class AliengoNav(LeggedRobot):
         clip_actions = self.cfg.normalization.clip_actions
         self.actions = torch.clip(actions, -clip_actions, clip_actions).to(self.device)
 
+        # action_lower = torch.Tensor([[-self.cfg.normalization.clip_action_lin_vel_x,
+        #                               -self.cfg.normalization.clip_action_ang_vel_yaw]]).to(self.device)
+        # print("action_lower", action_lower)
+        # action_upper = torch.Tensor([[self.cfg.normalization.clip_action_lin_vel_x,
+        #                               self.cfg.normalization.clip_action_ang_vel_yaw]]).to(self.device)
+        # print("action_upper", action_upper)
+        # self.action = torch.clip(actions, action_lower, action_upper).to(self.device)
+        # print("before clip ", actions)
+        # print("after clip ", self.actions)
+
+
         # ! calculate / concatenate the locomotion observation
         self.locomotion_commands[:, 0] = self.actions[:, 0] # vx
         self.locomotion_commands[:, 1] = 0                  # vy
