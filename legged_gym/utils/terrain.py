@@ -36,6 +36,10 @@ import random
 from isaacgym import terrain_utils
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg
 
+from .trimesh import frame_trimesh, combine_trimeshes, box_trimesh
+from isaacgym import gymtorch, gymapi, gymutil
+
+
 class Terrain:
     def __init__(self, cfg: LeggedRobotCfg.terrain, num_robots) -> None:
         self.cfg = cfg
@@ -74,12 +78,50 @@ class Terrain:
         self.heightsamples = self.height_field_raw
         if self.type=="trimesh":
             print("Converting heightmap to trimesh...")
-            self.vertices, self.triangles = terrain_utils.convert_heightfield_to_trimesh(   self.height_field_raw,
+            self.vertices_ground, self.triangles_ground = terrain_utils.convert_heightfield_to_trimesh(   self.height_field_raw,
                                                                                             self.cfg.horizontal_scale,
                                                                                             self.cfg.vertical_scale,
                                                                                             self.cfg.slope_treshold)
-            print("Created {} vertices".format(self.vertices.shape[0]))
-            print("Created {} triangles".format(self.triangles.shape[0]))
+            print("Created {} vertices (only ground) ".format(self.vertices_ground.shape[0]))
+            print("Created {} triangles (only ground) ".format(self.triangles_ground.shape[0]))
+
+            # TODO: create frame trimesh and combine them
+            # create
+            self.frame_vertices, self.frame_triangles = self.get_frame_trimeshes()
+            # TODO: combine
+            self.vertices = self.vertices_ground
+            self.triangles= self.triangles_ground
+            for i in range(len(self.frame_vertices)):
+                # add increment of the triangles
+                self.frame_triangles[i] = self.frame_triangles[i] + self.vertices.shape[0]
+                self.vertices = np.concatenate((self.vertices, self.frame_vertices[i]), axis=0)
+                self.triangles = np.concatenate((self.triangles, self.frame_triangles[i]), axis=0)
+
+            # self.vertices = self.vertices_ground
+            # self.triangles = self.triangles_ground
+
+            print("Created {} vertices (including frame) ".format(self.vertices.shape[0]))
+            print("Created {} triangles (including frame) ".format(self.triangles.shape[0]))
+
+    def get_frame_trimeshes(self): # goals: [rows, cols, goals, 3]
+        # create mulitple frame trimesh
+        frame_vertices, frame_triangles = [], []
+        for i in range(self.cfg.num_rows):
+            for j in range(self.cfg.num_cols):
+                for k in range(self.cfg.num_goals):
+                    center_position = self.goals[i, j, k] + np.array([self.cfg.border_size, self.cfg.border_size, 0])
+                    frame_vertices_cur, frame_triangles_cur = frame_trimesh(size=np.array([self.cfg.frame_depth ,
+                                                                                           self.cfg.frame_width ,
+                                                                                           self.cfg.frame_height ]),
+                                                                            center_position=center_position.astype(np.float32)
+                                                                           )
+                    # frame_vertices_cur, frame_triangles_cur = box_trimesh(size=np.array([10.1, 10.6, 10.6]),
+                    #                                                         center_position=center_position.astype(np.float32)
+                    #                                                         )
+                    frame_vertices.append(frame_vertices_cur)
+                    frame_triangles.append(frame_triangles_cur)
+        return frame_vertices, frame_triangles
+
     
     def randomized_terrain(self):
         for k in range(self.cfg.num_sub_terrains):
@@ -122,6 +164,12 @@ class Terrain:
                                              downsampled_scale=self.cfg.downsampled_scale)
 
     def make_terrain(self, choice, difficulty):
+        '''
+        Set terrain properties: height_field_raw; goals
+
+        Returns: terrain
+
+        '''
         terrain = terrain_utils.SubTerrain("terrain",
                                            width=self.length_per_env_pixels,
                                            length=self.width_per_env_pixels,
@@ -159,7 +207,7 @@ class Terrain:
             gap_terrain(terrain, gap_size=gap_size, platform_size=3.)
         elif choice < self.proportions[7]:
             pit_terrain(terrain, depth=pit_depth, platform_size=4.)
-        else:
+        elif choice < self.proportions[8]:
             parkour_hurdle_terrain(terrain,
                                    num_stones=self.num_goals - 2,
                                    stone_len=0.1 + 0.3 * difficulty,
@@ -171,10 +219,20 @@ class Terrain:
                                    flat=True,
                                    )
             self.add_roughness(terrain)
+        else:
+            parkour_frame_terrain(terrain,
+                                   num_stones=self.num_goals - 2,
+                                   x_range=[4.0, 4.1],
+                                   y_range=self.cfg.y_range,
+                                   )
+            self.add_roughness(terrain)
 
         return terrain
 
     def add_terrain_to_map(self, terrain, row, col):
+        '''
+        Set the private variable in this class: self.height_field_raw, self.env_origin_z(=0), self.goals
+        '''
         i = row
         j = col
         # map coordinate system
@@ -288,3 +346,40 @@ def parkour_hurdle_terrain(terrain,
     terrain.height_field_raw[:, -pad_width:] = pad_height
     terrain.height_field_raw[:pad_width, :] = pad_height
     terrain.height_field_raw[-pad_width:, :] = pad_height
+
+def parkour_frame_terrain(terrain,
+                           platform_len=4.0,
+                           platform_height=0.,
+                           num_stones=8,
+                           x_range=[1.5, 2.4],
+                           y_range=[-0.4, 0.4],
+                           ):
+    goals = np.zeros((num_stones + 2, 2))  # (num_goals, 2); 2 for x-y
+    # terrain.height_field_raw[:] = -200
+    mid_y = terrain.length // 2  # length is actually y width
+
+    dis_x_min = round(x_range[0] / terrain.horizontal_scale)
+    dis_x_max = round(x_range[1] / terrain.horizontal_scale)
+    dis_y_min = round(y_range[0] / terrain.horizontal_scale)
+    dis_y_max = round(y_range[1] / terrain.horizontal_scale)
+
+    platform_len = round(platform_len / terrain.horizontal_scale)
+    platform_height = round(platform_height / terrain.vertical_scale)
+    terrain.height_field_raw[0:platform_len, :] = platform_height
+
+    dis_x = platform_len
+    goals[0] = [platform_len - 1, mid_y]
+    last_dis_x = dis_x
+    for i in range(num_stones):
+        rand_x = np.random.randint(dis_x_min, dis_x_max)
+        rand_y = np.random.randint(dis_y_min, dis_y_max)
+        dis_x += rand_x
+        last_dis_x = dis_x
+        goals[i + 1] = [dis_x, mid_y + rand_y]
+    final_dis_x = dis_x + np.random.randint(dis_x_min, dis_x_max)
+    # import ipdb; ipdb.set_trace()
+    if final_dis_x > terrain.width:
+        final_dis_x = terrain.width - 0.5 // terrain.horizontal_scale
+    goals[-1] = [final_dis_x, mid_y]
+
+    terrain.goals = goals * terrain.horizontal_scale

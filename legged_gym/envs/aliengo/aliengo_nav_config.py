@@ -87,6 +87,10 @@ class AliengoNavCfg( LeggedRobotCfg ):
         mesh_type = 'trimesh'
         measure_heights = False
 
+        frame_depth = 0.1 # x
+        frame_width = 0.6 # y
+        frame_height= 0.6 # z
+
     class asset( LeggedRobotCfg.asset ):
         # file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/a1/urdf/a1.urdf'
         file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/aliengo_description/urdf/aliengo.urdf'
@@ -137,6 +141,8 @@ class AliengoNavCfg( LeggedRobotCfg ):
             tracking_goal_vel = 1.5
             tracking_yaw = 0.5
 
+    class normalization( LeggedRobotCfg.normalization ):
+        clip_actions = 0.8
 
     class commands:
         curriculum = False
