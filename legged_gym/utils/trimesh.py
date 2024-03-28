@@ -43,6 +43,7 @@ def box_trimesh(
 
 def frame_trimesh(
         size,            # float [3] for x, y, z axis length (in meter) under box frame
+        inner_frame_scale, # how much percentage of the inner frame account for the outter frame
         center_position, # float [3] position (in meter) in world frame
         rpy= np.zeros(3), # euler angle (in rad) not implemented yet.
     ):
@@ -61,54 +62,29 @@ def frame_trimesh(
 
     # inner
     vertices[8, 0] -= size[0] / 2
-    vertices[8, 1] -= size[1] / 4 * 1.8
-    vertices[8, 2] += size[1] / 4 * 1.8
+    vertices[8, 1] -= size[1] / 2 * inner_frame_scale
+    vertices[8, 2] += size[1] / 2 * inner_frame_scale
     vertices[9, 0] += size[0] / 2
-    vertices[9, 1] -= size[1] / 4 * 1.8
-    vertices[9, 2] += size[1] / 4 * 1.8
+    vertices[9, 1] -= size[1] / 2 * inner_frame_scale
+    vertices[9, 2] += size[1] / 2 * inner_frame_scale
     vertices[10, 0] -= size[0] / 2
-    vertices[10, 1] -= size[1] / 4 * 1.8
-    vertices[10, 2] -= size[1] / 4 * 1.8
+    vertices[10, 1] -= size[1] / 2 * inner_frame_scale
+    vertices[10, 2] -= size[1] / 2 * inner_frame_scale
     vertices[11, 0] += size[0] / 2
-    vertices[11, 1] -= size[1] / 4 * 1.8
-    vertices[11, 2] -= size[1] / 4 * 1.8
+    vertices[11, 1] -= size[1] / 2 * inner_frame_scale
+    vertices[11, 2] -= size[1] / 2 * inner_frame_scale
     vertices[12, 0] -= size[0] / 2
-    vertices[12, 1] += size[1] / 4 * 1.8
-    vertices[12, 2] += size[1] / 4 * 1.8
+    vertices[12, 1] += size[1] / 2 * inner_frame_scale
+    vertices[12, 2] += size[1] / 2 * inner_frame_scale
     vertices[13, 0] += size[0] / 2
-    vertices[13, 1] += size[1] / 4 * 1.8
-    vertices[13, 2] += size[1] / 4 * 1.8
+    vertices[13, 1] += size[1] / 2 * inner_frame_scale
+    vertices[13, 2] += size[1] / 2 * inner_frame_scale
     vertices[14, 0] -= size[0] / 2
-    vertices[14, 1] += size[1] / 4 * 1.8
-    vertices[14, 2] -= size[1] / 4 * 1.8
+    vertices[14, 1] += size[1] / 2 * inner_frame_scale
+    vertices[14, 2] -= size[1] / 2 * inner_frame_scale
     vertices[15, 0] += size[0] / 2
-    vertices[15, 1] += size[1] / 4 * 1.8
-    vertices[15, 2] -= size[1] / 4 * 1.8
-
-    # vertices[8, 0] -= size[0] / 2
-    # vertices[8, 1] -= size[1] / 2 + thickness
-    # vertices[8, 2] += size[1] / 2 - thickness
-    # vertices[9, 0] += size[0] / 2
-    # vertices[9, 1] -= size[1] / 2 + thickness
-    # vertices[9, 2] += size[1] / 2 - thickness
-    # vertices[10, 0] -= size[0] / 2
-    # vertices[10, 1] -= size[1] / 2 + thickness
-    # vertices[10, 2] -= size[1] / 2 + thickness
-    # vertices[11, 0] += size[0] / 2
-    # vertices[11, 1] -= size[1] / 2 + thickness
-    # vertices[11, 2] -= size[1] / 2 + thickness
-    # vertices[12, 0] -= size[0] / 2
-    # vertices[12, 1] += size[1] / 2 - thickness
-    # vertices[12, 2] += size[1] / 2 - thickness
-    # vertices[13, 0] += size[0] / 2
-    # vertices[13, 1] += size[1] / 2 - thickness
-    # vertices[13, 2] += size[1] / 2 - thickness
-    # vertices[14, 0] -= size[0] / 2
-    # vertices[14, 1] += size[1] / 2 - thickness
-    # vertices[14, 2] -= size[1] / 2 + thickness
-    # vertices[15, 0] += size[0] / 2
-    # vertices[15, 1] += size[1] / 2 - thickness
-    # vertices[15, 2] -= size[1] / 2 + thickness
+    vertices[15, 1] += size[1] / 2 * inner_frame_scale
+    vertices[15, 2] -= size[1] / 2 * inner_frame_scale
 
     triangles = -np.ones((32, 3), dtype= np.uint32)
     triangles[0] = [0, 8, 2]  #

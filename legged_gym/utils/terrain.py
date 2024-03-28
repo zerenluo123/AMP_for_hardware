@@ -57,6 +57,7 @@ class Terrain:
         self.env_origins = np.zeros((cfg.num_rows, cfg.num_cols, 3))
         self.terrain_type = np.zeros((cfg.num_rows, cfg.num_cols))
 
+        self.frame_center = np.zeros((cfg.num_rows, cfg.num_cols, cfg.num_goals, 3))
         self.goals = np.zeros((cfg.num_rows, cfg.num_cols, cfg.num_goals, 3))
         self.num_goals = cfg.num_goals
 
@@ -85,39 +86,41 @@ class Terrain:
             print("Created {} vertices (only ground) ".format(self.vertices_ground.shape[0]))
             print("Created {} triangles (only ground) ".format(self.triangles_ground.shape[0]))
 
-            # ! create frame trimesh and combine them
-            # ! create
-            self.frame_vertices, self.frame_triangles = self.get_frame_trimeshes()
-            # ! combine
+            # initialize
             self.vertices = self.vertices_ground
             self.triangles= self.triangles_ground
-            for i in range(len(self.frame_vertices)):
-                # add increment of the triangles
-                self.frame_triangles[i] = self.frame_triangles[i] + self.vertices.shape[0]
-                self.vertices = np.concatenate((self.vertices, self.frame_vertices[i]), axis=0)
-                self.triangles = np.concatenate((self.triangles, self.frame_triangles[i]), axis=0)
 
-            # self.vertices = self.vertices_ground
-            # self.triangles = self.triangles_ground
+            if self.cfg.combine_frame:
+                # ! create frame trimesh and combine them
+                # ! create
+                self.frame_vertices, self.frame_triangles = self.get_frame_trimeshes()
+                # ! combine
+                for i in range(len(self.frame_vertices)):
+                    # add increment of the triangles
+                    self.frame_triangles[i] = self.frame_triangles[i] + self.vertices.shape[0]
+                    # combine the ground and the frame
+                    self.vertices = np.concatenate((self.vertices, self.frame_vertices[i]), axis=0)
+                    self.triangles = np.concatenate((self.triangles, self.frame_triangles[i]), axis=0)
 
-            print("Created {} vertices (including frame) ".format(self.vertices.shape[0]))
-            print("Created {} triangles (including frame) ".format(self.triangles.shape[0]))
+                print("Created {} vertices (including frame) ".format(self.vertices.shape[0]))
+                print("Created {} triangles (including frame) ".format(self.triangles.shape[0]))
 
-    def get_frame_trimeshes(self): # goals: [rows, cols, goals, 3]
+    def get_frame_trimeshes(self):
         # create mulitple frame trimesh
         frame_vertices, frame_triangles = [], []
         for i in range(self.cfg.num_rows):
             for j in range(self.cfg.num_cols):
                 for k in range(self.cfg.num_goals):
-                    center_position = self.goals[i, j, k] + np.array([self.cfg.border_size, self.cfg.border_size, 0.45])
+                    # add border offset and hanging height to the frame center
+                    center_position = self.frame_center[i, j, k] \
+                                      + np.array([self.cfg.border_size, self.cfg.border_size, self.cfg.frame_hanging_height])
+                    # create trimesh
                     frame_vertices_cur, frame_triangles_cur = frame_trimesh(size=np.array([self.cfg.frame_depth ,
                                                                                            self.cfg.frame_width ,
                                                                                            self.cfg.frame_height ]),
+                                                                            inner_frame_scale= self.cfg.inner_frame_scale,
                                                                             center_position=center_position.astype(np.float32)
                                                                            )
-                    # frame_vertices_cur, frame_triangles_cur = box_trimesh(size=np.array([10.1, 10.6, 10.6]),
-                    #                                                         center_position=center_position.astype(np.float32)
-                    #                                                         )
                     frame_vertices.append(frame_vertices_cur)
                     frame_triangles.append(frame_triangles_cur)
         return frame_vertices, frame_triangles
@@ -221,10 +224,11 @@ class Terrain:
             self.add_roughness(terrain)
         else:
             parkour_frame_terrain(terrain,
-                                   num_stones=self.num_goals - 2,
-                                   x_range=[4.0, 4.1],
-                                   y_range=self.cfg.y_range,
-                                   )
+                                  first_frame_position=self.cfg.first_frame_position,
+                                  num_stones=self.num_goals - 2,
+                                  frame_interval_x=[self.cfg.frame_interval_x[0], self.cfg.frame_interval_x[1]],
+                                  frame_interval_y=[self.cfg.frame_interval_y[0], self.cfg.frame_interval_y[1]],
+                                )
             self.add_roughness(terrain)
 
         return terrain
@@ -256,6 +260,16 @@ class Terrain:
         self.env_origins[i, j] = [env_origin_x, env_origin_y, env_origin_z]
         # self.terrain_type[i, j] = terrain.idx
         self.goals[i, j, :, :2] = terrain.goals + [i * self.env_length, j * self.env_width]
+
+        # center of frame lie in the middle of the terrain goals
+        # x----------||(first frame)-----X----||----X----||-----X----||----X  (X for goals, || for frame)
+        first_frame_start_position = np.array([[self.cfg.first_frame_position, self.env_width/2]])
+        # ! calculate the middle of every two frames (x{N} + x{N+1}) / 2 (N >= 1)
+        temp = (terrain.goals[:-1] + terrain.goals[1:]) / 2
+        # ! concat the first frame with the first frame
+        frame_center = np.concatenate((first_frame_start_position, temp), axis=0)
+        # ! calculate the frame in the world frame
+        self.frame_center[i, j, :, :2] = frame_center + [i * self.env_length, j * self.env_width]
 
 def gap_terrain(terrain, gap_size, platform_size=1.):
     gap_size = int(gap_size / terrain.horizontal_scale)
@@ -348,27 +362,24 @@ def parkour_hurdle_terrain(terrain,
     terrain.height_field_raw[-pad_width:, :] = pad_height
 
 def parkour_frame_terrain(terrain,
-                           platform_len=4.0,
-                           platform_height=0.,
+                           first_frame_position=4.0,     # soft zone: where to set the first goal
                            num_stones=8,
-                           x_range=[1.5, 2.4],
-                           y_range=[-0.4, 0.4],
+                           frame_interval_x=[1.5, 2.4],
+                           frame_interval_y=[-0.4, 0.4],
                            ):
     goals = np.zeros((num_stones + 2, 2))  # (num_goals, 2); 2 for x-y
     # terrain.height_field_raw[:] = -200
     mid_y = terrain.length // 2  # length is actually y width
 
-    dis_x_min = round(x_range[0] / terrain.horizontal_scale)
-    dis_x_max = round(x_range[1] / terrain.horizontal_scale)
-    dis_y_min = round(y_range[0] / terrain.horizontal_scale)
-    dis_y_max = round(y_range[1] / terrain.horizontal_scale)
+    dis_x_min = round(frame_interval_x[0] / terrain.horizontal_scale)
+    dis_x_max = round(frame_interval_x[1] / terrain.horizontal_scale)
+    dis_y_min = round(frame_interval_y[0] / terrain.horizontal_scale)
+    dis_y_max = round(frame_interval_y[1] / terrain.horizontal_scale)
 
-    platform_len = round(platform_len / terrain.horizontal_scale)
-    platform_height = round(platform_height / terrain.vertical_scale)
-    terrain.height_field_raw[0:platform_len, :] = platform_height
+    first_goal_position_x = round(first_frame_position / terrain.horizontal_scale) + np.random.randint(dis_x_min, dis_x_max)/2
 
-    dis_x = platform_len
-    goals[0] = [platform_len - 1, mid_y]
+    dis_x = first_goal_position_x
+    goals[0] = [first_goal_position_x, mid_y]
     last_dis_x = dis_x
     for i in range(num_stones):
         rand_x = np.random.randint(dis_x_min, dis_x_max)

@@ -57,7 +57,7 @@ class LeggedRobotCfg(BaseConfig):
         horizontal_scale = 0.05 # [m]
         vertical_scale = 0.005 # [m]
         border_size = 5 # [m]
-        height = [0.00, 0.05]
+        height = [0.00, 0.00]
         downsampled_scale = 0.2
         curriculum = False
 

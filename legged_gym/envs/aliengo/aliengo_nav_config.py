@@ -87,9 +87,23 @@ class AliengoNavCfg( LeggedRobotCfg ):
         mesh_type = 'trimesh'
         measure_heights = False
 
+        # ! frame related
+        combine_frame = True
+
+        # frame size
         frame_depth = 0.1 # x
         frame_width = 0.8 # y
         frame_height= 0.8 # z
+        inner_frame_scale = 0.9 # inner frame / outer frame
+
+        # frame position
+        frame_hanging_height = 0.5
+        first_frame_position = 4.0
+
+        # frame interval: distance between f{N} and f{N+1}
+        frame_interval_x = [4.0, 4.1]
+        frame_interval_y = [-1.3, 1.3]
+
 
     class asset( LeggedRobotCfg.asset ):
         # file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/a1/urdf/a1.urdf'
