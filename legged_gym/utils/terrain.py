@@ -85,10 +85,10 @@ class Terrain:
             print("Created {} vertices (only ground) ".format(self.vertices_ground.shape[0]))
             print("Created {} triangles (only ground) ".format(self.triangles_ground.shape[0]))
 
-            # TODO: create frame trimesh and combine them
-            # create
+            # ! create frame trimesh and combine them
+            # ! create
             self.frame_vertices, self.frame_triangles = self.get_frame_trimeshes()
-            # TODO: combine
+            # ! combine
             self.vertices = self.vertices_ground
             self.triangles= self.triangles_ground
             for i in range(len(self.frame_vertices)):
@@ -109,7 +109,7 @@ class Terrain:
         for i in range(self.cfg.num_rows):
             for j in range(self.cfg.num_cols):
                 for k in range(self.cfg.num_goals):
-                    center_position = self.goals[i, j, k] + np.array([self.cfg.border_size, self.cfg.border_size, 0])
+                    center_position = self.goals[i, j, k] + np.array([self.cfg.border_size, self.cfg.border_size, 0.45])
                     frame_vertices_cur, frame_triangles_cur = frame_trimesh(size=np.array([self.cfg.frame_depth ,
                                                                                            self.cfg.frame_width ,
                                                                                            self.cfg.frame_height ]),

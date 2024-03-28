@@ -88,8 +88,8 @@ class AliengoNavCfg( LeggedRobotCfg ):
         measure_heights = False
 
         frame_depth = 0.1 # x
-        frame_width = 0.6 # y
-        frame_height= 0.6 # z
+        frame_width = 0.8 # y
+        frame_height= 0.8 # z
 
     class asset( LeggedRobotCfg.asset ):
         # file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/a1/urdf/a1.urdf'
